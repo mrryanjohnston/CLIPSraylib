@@ -10,7 +10,7 @@ to build videogames.
 
 Provides some very light wrapper functions in `userfunctions.c`
 that expose C-level raylib functions to a CLIPS rules engine.
-See the following files for working examples:
+See the files in the `examples` directory:
 
 ```
 program-2d-camera-platformer.bat
@@ -44,7 +44,7 @@ with `make`. This will build a `clips` binary in this directory. You may then ru
 the examples like so:
 
 ```
-./clips -f2 program.bat
+./clips -f2 examples/program.bat
 ```
 
 You may use `make clean` to tidy up and run `make` again.
@@ -52,7 +52,7 @@ You may use `make clean` to tidy up and run `make` again.
 ## Reading the source code
 
 Start out in `program-flat.bat` as it is the easiest example.
-If you run it with `clips -f2 program-flat.bat`, it'll leave CLIPS open
+If you run it with `clips -f2 examples/program-flat.bat`, it'll leave CLIPS open
 so that you may interact with the environment like so:
 
 ```
