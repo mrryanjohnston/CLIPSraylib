@@ -6,6 +6,8 @@ and
 [raylib](https://www.raylib.com/)
 to build videogames.
 
+![2d-platformer-CLIPSraylib](https://github.com/user-attachments/assets/52a75193-6ff8-40bd-8c70-83ceddcb7b68)
+
 ## Description
 
 Provides some very light wrapper functions in `userfunctions.c`
