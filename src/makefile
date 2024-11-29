@@ -88,12 +88,12 @@ release_cpp : LDLIBS = -lstdc++
 release_cpp : clips
 
 .c.o :
-	#$(CC) -c -lraylib -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
-	$(CC) -c -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
+	$(CC) -c -lraylib -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
+	#$(CC) -c -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
 
 clips : main.o libclips.a
-	#$(CC) -o ../clips main.o -lraylib -L. -lclips $(LDLIBS)
-	$(CC) -o ../clips main.o -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -L. -lclips $(LDLIBS)
+	$(CC) -o ../clips main.o -lraylib -L. -lclips $(LDLIBS)
+	#$(CC) -o ../clips main.o -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -L. -lclips $(LDLIBS)
 	
 libclips.a : $(OBJS)
 	rm -f $@   
