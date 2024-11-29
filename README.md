@@ -51,6 +51,9 @@ the examples like so:
 
 You may use `make clean` to tidy up and run `make` again.
 
+This can also be installed via [CLIPSenv](https://github.com/mrryanjohnston/CLIPSenv),
+a CLIPS environment manager for local development machines.
+
 ## Reading the source code
 
 Start out in `program-flat.bat` as it is the easiest example.
