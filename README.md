@@ -35,7 +35,7 @@ from the raylib website.
 This installation process assumes you already have `raylib` installed on your computer
 and available from within C files like so:
 
-```
+```c
 #include "raylib.h"
 #include "rlgl.h"
 #include "raymath.h"
