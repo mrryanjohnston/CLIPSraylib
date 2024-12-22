@@ -52,6 +52,8 @@
 #include "raylib.h"
 #include "rlgl.h"
 #include "raymath.h"
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 
 void UserFunctions(Environment *);
 
@@ -274,6 +276,126 @@ void RaylibDrawCircleLines(
 	DrawCircleLines(centerx, centery, radius, color);
 }
 
+void RaylibFade(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	Color color, faded;
+	int r, g, b, a;
+	float alpha;
+	MultifieldBuilder *mb;
+	UDFValue theArg;
+
+	if (UDFArgumentCount(context) == 2)
+	{
+		UDFNextArgument(context,SYMBOL_BIT,&theArg);
+		str_to_color(theArg.lexemeValue->contents, &color);
+
+		UDFNextArgument(context,FLOAT_BIT,&theArg);
+		faded = Fade(color,theArg.floatValue->contents);
+	}
+	else if (UDFArgumentCount(context) == 5)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+
+		UDFNextArgument(context,FLOAT_BIT,&theArg);
+		alpha = theArg.floatValue->contents;
+
+		color = (Color){r, g, b, a};
+		faded = Fade(color,alpha);
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-fade must have either 2 or 5 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	mb = CreateMultifieldBuilder(theEnv, 4);
+	MBAppendInteger(mb,faded.r);
+	MBAppendInteger(mb,faded.g);
+	MBAppendInteger(mb,faded.b);
+	MBAppendInteger(mb,faded.a);
+
+	returnValue->multifieldValue = MBCreate(mb);
+
+	MBDispose(mb);
+}
+
+void RaylibDrawLine(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	long long startpositionx, startpositiony, endpositionx, endpositiony;
+	int r, g, b, a;
+	Color color;
+	Multifield mf;
+	UDFValue theArg;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	startpositionx = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	startpositiony = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	endpositionx = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	endpositiony = theArg.integerValue->contents;
+
+	if (UDFArgumentCount(context) == 5)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-line's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-line must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawLine(startpositionx, startpositiony, endpositionx, endpositiony, color);
+}
 
 void RaylibDrawRectangle(
 		Environment *theEnv,
@@ -281,6 +403,7 @@ void RaylibDrawRectangle(
 		UDFValue *returnValue)
 {
 	long long positionx, positiony, width, height;
+	int r, g, b, a;
 	Color color;
 	UDFValue theArg;
 
@@ -296,8 +419,46 @@ void RaylibDrawRectangle(
 	UDFNextArgument(context,INTEGER_BIT,&theArg);
 	height = theArg.integerValue->contents;
 
-	UDFNextArgument(context,SYMBOL_BIT,&theArg);
-	str_to_color(theArg.lexemeValue->contents, &color);
+	if (UDFArgumentCount(context) == 5)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-rectangle-rounded's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-rectangle must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
 
 	DrawRectangle(positionx, positiony, width, height, color);
 }
@@ -307,6 +468,7 @@ void RaylibDrawRectangleLines(
 		UDFContext *context,
 		UDFValue *returnValue)
 {
+	int r, g, b, a;
 	long long positionx, positiony, width, height;
 	Color color;
 	UDFValue theArg;
@@ -323,8 +485,46 @@ void RaylibDrawRectangleLines(
 	UDFNextArgument(context,INTEGER_BIT,&theArg);
 	height = theArg.integerValue->contents;
 
-	UDFNextArgument(context,SYMBOL_BIT,&theArg);
-	str_to_color(theArg.lexemeValue->contents, &color);
+	if (UDFArgumentCount(context) == 5)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-rectangle-rounded's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-rectangle must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
 
 	DrawRectangleLines(positionx, positiony, width, height, color);
 }
@@ -336,6 +536,7 @@ void RaylibDrawRectangleRounded(
 {
 	float x, y, width, height, roundness;
 	long long segments;
+	int r, g, b, a;
 	Color color;
 	UDFValue theArg;
 
@@ -393,8 +594,46 @@ void RaylibDrawRectangleRounded(
 	UDFNextArgument(context,INTEGER_BIT,&theArg);
 	segments = theArg.integerValue->contents;
 
-	UDFNextArgument(context,SYMBOL_BIT,&theArg);
-	str_to_color(theArg.lexemeValue->contents, &color);
+	if (UDFArgumentCount(context) == 7)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-rectangle-rounded's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 10)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-rectangle-rounded must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
 
 	Rectangle rec = { x, y, width, height };
 
@@ -406,8 +645,120 @@ void RaylibDrawRectangleRoundedLines(
 		UDFContext *context,
 		UDFValue *returnValue)
 {
+	float x, y, width, height, roundness;
+	long long segments;
+	int r, g, b, a;
+	Color color;
+	UDFValue theArg;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	y = theArg.integerValue->contents;
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			height = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			roundness = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			roundness = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	segments = theArg.integerValue->contents;
+
+	if (UDFArgumentCount(context) == 7)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-rectangle-rounded's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 10)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-rectangle-rounded must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	Rectangle rec = { x, y, width, height };
+
+	DrawRectangleRoundedLines(rec, roundness, segments, color);
+}
+
+void RaylibDrawRectangleRoundedLinesEx(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
 	float x, y, width, height, roundness, lineThickness;
 	long long segments;
+	int r, g, b, a;
 	Color color;
 	UDFValue theArg;
 
@@ -475,13 +826,50 @@ void RaylibDrawRectangleRoundedLines(
 			break;
 	}
 
-	UDFNextArgument(context,SYMBOL_BIT,&theArg);
-	str_to_color(theArg.lexemeValue->contents, &color);
+	if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-rectangle-rounded's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 11)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-rectangle-rounded must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
 
 	Rectangle rec = { x, y, width, height };
 
-	//DrawRectangleRoundedLines(rec, roundness, segments, lineThickness, color);
-	DrawRectangleRoundedLines(rec, roundness, segments, color);
+	DrawRectangleRoundedLinesEx(rec, roundness, segments, lineThickness, color);
 }
 
 void RaylibGetRenderHeight(
@@ -1795,6 +2183,155 @@ void RaylibGetWorldToScreen2D(
 	MBDispose(mb);
 }
 
+void RaylibGuiSliderBar(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	Rectangle rec;
+	float x, y, width, height, value, minValue, maxValue;
+	const char *left, *right;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			height = theArg.floatValue->contents;
+			break;
+	}
+
+	rec = (Rectangle){ x, y, width, height };
+
+	UDFNextArgument(context,STRING_BIT,&theArg);
+	left = theArg.lexemeValue->contents;
+
+	UDFNextArgument(context,STRING_BIT,&theArg);
+	right = theArg.lexemeValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	value = theArg.floatValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	minValue = theArg.floatValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	GuiSliderBar(rec, left, right, &value, minValue, theArg.floatValue->contents);
+
+	returnValue->floatValue = CreateFloat(theEnv, value);
+}
+
+void RaylibGuiCheckBox(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	Rectangle rec;
+	float x, y, width, height, value, minValue, maxValue;
+	const char *left, *right;
+	bool theValue;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			height = theArg.floatValue->contents;
+			break;
+	}
+
+	rec = (Rectangle){ x, y, width, height };
+
+	UDFNextArgument(context,STRING_BIT,&theArg);
+	left = theArg.lexemeValue->contents;
+
+	UDFNextArgument(context,BOOLEAN_BIT,&theArg);
+	if (TrueSymbol(theEnv) == theArg.lexemeValue)
+	{
+		printf("before TRUE\n");
+		theValue = true;
+	}
+	else
+	{
+		printf("before FALSE\n");
+		theValue = false;
+	}
+	GuiCheckBox(rec, left, &theValue);
+	if (theValue)
+	{
+		returnValue->lexemeValue = TrueSymbol(theEnv);
+	}
+	else
+	{
+		returnValue->lexemeValue = FalseSymbol(theEnv);
+	}
+}
+
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -1819,10 +2356,13 @@ void UserFunctions(
 	  AddUDF(env,"raylib-close-window","v",0,0,NULL,RaylibCloseWindow,"RaylibCloseWindow",NULL);
 	  AddUDF(env,"raylib-draw-circle","v",4,4,";l;l;dl;y",RaylibDrawCircle,"RaylibDrawCircle",NULL);
 	  AddUDF(env,"raylib-draw-circle-lines","v",4,4,";l;l;dl;y",RaylibDrawCircleLines,"RaylibDrawCircleLines",NULL);
-	  AddUDF(env,"raylib-draw-rectangle","v",5,5,";l;l;l;l;y",RaylibDrawRectangle,"RaylibDrawRectangle",NULL);
-	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,5,";l;l;l;l;y",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
-	  AddUDF(env,"raylib-draw-rectangle-rounded","v",7,7,";dl;dl;dl;dl;dl;l;y",RaylibDrawRectangleRounded,"RaylibDrawRectangleRounded",NULL);
-	  AddUDF(env,"raylib-draw-rectangle-rounded-lines","v",8,8,";dl;dl;dl;dl;dl;l;dl;y",RaylibDrawRectangleRoundedLines,"RaylibDrawRectangleRoundedLines",NULL);
+	  AddUDF(env,"raylib-fade","m",2,5,";ly;dl;l;l;d",RaylibFade,"RaylibFade",NULL);
+	  AddUDF(env,"raylib-draw-line","v",5,8,";l;l;l;l;lmy;l;l;l",RaylibDrawLine,"RaylibDrawLine",NULL);
+	  AddUDF(env,"raylib-draw-rectangle","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangle,"RaylibDrawRectangle",NULL);
+	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
+	  AddUDF(env,"raylib-draw-rectangle-rounded","v",7,10,";dl;dl;dl;dl;dl;l;dmy;l;l;l",RaylibDrawRectangleRounded,"RaylibDrawRectangleRounded",NULL);
+	  AddUDF(env,"raylib-draw-rectangle-rounded-lines","v",7,10,";dl;dl;dl;dl;dl;l;lmy;l;l;l",RaylibDrawRectangleRoundedLines,"RaylibDrawRectangleRoundedLines",NULL);
+	  AddUDF(env,"raylib-draw-rectangle-rounded-lines-ex","v",8,11,";dl;dl;dl;dl;dl;l;dl;lmy;l;l;l",RaylibDrawRectangleRoundedLinesEx,"RaylibDrawRectangleRoundedLinesEx",NULL);
 	  AddUDF(env,"raylib-get-mouse-position","m",0,0,NULL,RaylibGetMousePosition,"RaylibGetMousePosition",NULL);
 	  AddUDF(env,"raylib-get-mouse-delta","m",0,0,NULL,RaylibGetMouseDelta,"RaylibGetMouseDelta",NULL);
 	  AddUDF(env,"raylib-get-render-height","l",0,0,NULL,RaylibGetRenderHeight,"RaylibGetRenderHeight",NULL);
@@ -1849,4 +2389,7 @@ void UserFunctions(
 
 	  AddUDF(env,"raylib-get-screen-to-world-2d","m",0,7,";dl;dl;dl;dl;dl;dl;dl",RaylibGetScreenToWorld2D,"RaylibGetScreenToWorld2D",NULL);
 	  AddUDF(env,"raylib-get-world-to-screen-2d","m",0,7,";dl;dl;dl;dl;dl;dl;dl",RaylibGetWorldToScreen2D,"RaylibGetWorldToScreen2D",NULL);
+
+	  AddUDF(env,"raylib-gui-check-box","b",6,6,";dl;dl;dl;dl;s;b",RaylibGuiCheckBox,"RaylibGuiCheckBox",NULL);
+	  AddUDF(env,"raylib-gui-slider-bar","d",9,9,";dl;dl;dl;dl;s;s;d;d;d",RaylibGuiSliderBar,"RaylibGuiSliderBar",NULL);
   }

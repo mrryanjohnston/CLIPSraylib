@@ -15,7 +15,7 @@
 	(raylib-draw-rectangle 150 300 20 30 SKYBLUE)
 	(raylib-draw-rectangle-lines 180 150 60 90 SKYBLUE)
 	(raylib-draw-rectangle-rounded 200 200 100 150 200 300 YELLOW)
-	(raylib-draw-rectangle-rounded-lines 300 100 100 150 0.5 300 10 YELLOW)
+	(raylib-draw-rectangle-rounded-lines 300 100 100 150 300 10 YELLOW)
 	(raylib-end-drawing)
 	(retract ?f)
 	(assert (time (time))))
