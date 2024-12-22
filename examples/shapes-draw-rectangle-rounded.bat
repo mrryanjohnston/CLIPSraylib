@@ -18,7 +18,7 @@
 	(raylib-begin-drawing)
 		(raylib-clear-background RAYWHITE)
 
-		(raylib-draw-text "Controls:" 20 20 10 BLACK)
+		(raylib-draw-fps 20 20)
 		(raylib-draw-line 560 0 560 (raylib-get-screen-height) (raylib-fade LIGHTGRAY 0.6))
 		(raylib-draw-rectangle 560 0 (- (raylib-get-screen-width) 500) (raylib-get-screen-height) (raylib-fade LIGHTGRAY 0.3))
 	(assert (drawing)))

@@ -2331,6 +2331,20 @@ void RaylibGuiCheckBox(
 	}
 }
 
+void RaylibDrawFPS(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	int x;
+	UDFValue theArg;
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	x = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	DrawFPS(x, theArg.integerValue->contents);
+}
+
 
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
@@ -2356,13 +2370,14 @@ void UserFunctions(
 	  AddUDF(env,"raylib-close-window","v",0,0,NULL,RaylibCloseWindow,"RaylibCloseWindow",NULL);
 	  AddUDF(env,"raylib-draw-circle","v",4,4,";l;l;dl;y",RaylibDrawCircle,"RaylibDrawCircle",NULL);
 	  AddUDF(env,"raylib-draw-circle-lines","v",4,4,";l;l;dl;y",RaylibDrawCircleLines,"RaylibDrawCircleLines",NULL);
-	  AddUDF(env,"raylib-fade","m",2,5,";ly;dl;l;l;d",RaylibFade,"RaylibFade",NULL);
 	  AddUDF(env,"raylib-draw-line","v",5,8,";l;l;l;l;lmy;l;l;l",RaylibDrawLine,"RaylibDrawLine",NULL);
 	  AddUDF(env,"raylib-draw-rectangle","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangle,"RaylibDrawRectangle",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded","v",7,10,";dl;dl;dl;dl;dl;l;dmy;l;l;l",RaylibDrawRectangleRounded,"RaylibDrawRectangleRounded",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded-lines","v",7,10,";dl;dl;dl;dl;dl;l;lmy;l;l;l",RaylibDrawRectangleRoundedLines,"RaylibDrawRectangleRoundedLines",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded-lines-ex","v",8,11,";dl;dl;dl;dl;dl;l;dl;lmy;l;l;l",RaylibDrawRectangleRoundedLinesEx,"RaylibDrawRectangleRoundedLinesEx",NULL);
+	  AddUDF(env,"raylib-draw-fps","v",2,2,";l;l",RaylibDrawFPS,"RaylibDrawFPS",NULL);
+	  AddUDF(env,"raylib-fade","m",2,5,";ly;dl;l;l;d",RaylibFade,"RaylibFade",NULL);
 	  AddUDF(env,"raylib-get-mouse-position","m",0,0,NULL,RaylibGetMousePosition,"RaylibGetMousePosition",NULL);
 	  AddUDF(env,"raylib-get-mouse-delta","m",0,0,NULL,RaylibGetMouseDelta,"RaylibGetMouseDelta",NULL);
 	  AddUDF(env,"raylib-get-render-height","l",0,0,NULL,RaylibGetRenderHeight,"RaylibGetRenderHeight",NULL);
