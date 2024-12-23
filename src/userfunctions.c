@@ -276,6 +276,93 @@ void RaylibDrawCircleLines(
 	DrawCircleLines(centerx, centery, radius, color);
 }
 
+void RaylibDrawCircleV(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	Vector2 circle;
+	float centerx, centery, radius;
+	int r, g, b, a;
+	Color color;
+	UDFValue theArg;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			centerx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			centerx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			centery = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			centery = theArg.floatValue->contents;
+			break;
+	}
+
+	circle = (Vector2){ centerx, centery };
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			radius = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			radius = theArg.floatValue->contents;
+			break;
+	}
+
+	if (UDFArgumentCount(context) == 4)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-circle-v's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 7)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-circle-v must have either 4 or 7 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawCircleV(circle, radius, color);
+}
+
 void RaylibFade(
 		Environment *theEnv,
 		UDFContext *context,
@@ -2370,6 +2457,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-close-window","v",0,0,NULL,RaylibCloseWindow,"RaylibCloseWindow",NULL);
 	  AddUDF(env,"raylib-draw-circle","v",4,4,";l;l;dl;y",RaylibDrawCircle,"RaylibDrawCircle",NULL);
 	  AddUDF(env,"raylib-draw-circle-lines","v",4,4,";l;l;dl;y",RaylibDrawCircleLines,"RaylibDrawCircleLines",NULL);
+	  AddUDF(env,"raylib-draw-circle-v","v",4,7,";dl;dl;dl;lmy;l;l;l",RaylibDrawCircleV,"RaylibDrawCircleV",NULL);
 	  AddUDF(env,"raylib-draw-line","v",5,8,";l;l;l;l;lmy;l;l;l",RaylibDrawLine,"RaylibDrawLine",NULL);
 	  AddUDF(env,"raylib-draw-rectangle","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangle,"RaylibDrawRectangle",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
