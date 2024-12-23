@@ -1,5 +1,6 @@
 (raylib-init-window 800 450 "CLIPSraylib [shapes] example - bouncing ball")
 (raylib-set-target-fps 60)
+
 (deffacts init
 	(xposition 20.0)
 	(yposition 20.0)
@@ -94,12 +95,14 @@
 	=>
 	(retract ?f ?unpause ?w)
 	(raylib-begin-drawing)
-	(if (> (mod (/ ?frames 30) 2) 2) then
+		(raylib-clear-background RAYWHITE)
+	(if (= (mod (integer (/ ?frames 30)) 2) 0)
+		then
 		(raylib-draw-text "PAUSED" 350 200 30 GRAY))
 	(assert
-		(window-should-close (raylib-window-should-close))
 		(frames (+ 1 ?frames))
-		(unpause (raylib-is-key-pressed KEY_SPACE)))
+		(unpause (raylib-is-key-pressed KEY_SPACE))
+		(window-should-close (raylib-window-should-close)))
 	(raylib-end-drawing))
 
 (defrule unpause
@@ -119,5 +122,4 @@
 	(raylib-close-window)
 	(exit))
 (reset)
-;(watch all)
 (run)
