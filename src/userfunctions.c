@@ -173,6 +173,7 @@ void RaylibDrawText(
 		UDFContext *context,
 		UDFValue *returnValue)
 {
+	int r, g, b, a;
 	const char *theText;
 	long long x, y, fontSize;
 	Color color;
@@ -190,8 +191,46 @@ void RaylibDrawText(
 	UDFNextArgument(context,INTEGER_BIT,&theArg);
 	fontSize = theArg.integerValue->contents;
 
-	UDFNextArgument(context,SYMBOL_BIT,&theArg);
-	str_to_color(theArg.lexemeValue->contents, &color);
+	if (UDFArgumentCount(context) == 5)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-text's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-text must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
 
 	DrawText(theText, x, y, fontSize, color);
 }
@@ -2692,7 +2731,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-window-should-close","b",0,0,NULL,RaylibWindowShouldClose,"RaylibWindowShouldClose",NULL);
 	  AddUDF(env,"raylib-begin-drawing","v",0,0,NULL,RaylibBeginDrawing,"RaylibBeginDrawing",NULL);
 	  AddUDF(env,"raylib-clear-background","v",1,1,";y",RaylibClearBackground,"RaylibClearBackground",NULL);
-	  AddUDF(env,"raylib-draw-text","v",5,5,";s;l;l;l;y",RaylibDrawText,"RaylibDrawText",NULL);
+	  AddUDF(env,"raylib-draw-text","v",5,8,";s;l;l;l;lmy;l;l;l",RaylibDrawText,"RaylibDrawText",NULL);
 	  AddUDF(env,"raylib-measure-text","l",2,2,";s;l",RaylibMeasureText,"RaylibMeasureText",NULL);
 	  AddUDF(env,"raylib-end-drawing","v",0,0,NULL,RaylibEndDrawing,"RaylibEndDrawing",NULL);
 	  AddUDF(env,"raylib-close-window","v",0,0,NULL,RaylibCloseWindow,"RaylibCloseWindow",NULL);
