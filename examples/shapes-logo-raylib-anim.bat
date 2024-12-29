@@ -1,4 +1,4 @@
-(raylib-init-window 800 450 "CLIPSraylib [shapes] example - collision area")
+(raylib-init-window 800 450 "CLIPSraylib [shapes] example - raylib logo animation")
 (raylib-set-target-fps 60)
 
 (deffacts init
