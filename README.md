@@ -18,6 +18,7 @@ See the files in the `examples` directory:
 shapes-bouncing-ball.bat
 shapes-collision-area.bat
 shapes-draw-rectangle-rounded.bat
+shapes-logo-raylib-anim.bat
 program-2d-camera-platformer.bat
 program.bat
 program-circles.bat
