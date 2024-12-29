@@ -3,6 +3,7 @@
 
 (deffacts init
 	(box-a 10 175 200 100)
+	(box-a-speed 4)
 	(box-b 370 175 60 60)
 	(pause FALSE)
 	(unpause FALSE)
@@ -30,8 +31,7 @@
 (defrule draw-no-collision
 	?d <- (drawing)
 	(box-a ?ax ?ay ?awidth ?aheight)
-	(box-b ?bx ?by ?bwidth ?bheight)
-	(screen-upper-limit ?u)
+	(box-b ?bx ?by ?bwidth ?bheight) (screen-upper-limit ?u)
 	(window-should-close FALSE)
 	(test (not (raylib-check-collision-recs
 		?ax ?ay ?awidth ?aheight
@@ -86,16 +86,40 @@
 	(assert (done))
 	(retract ?c))
 
-(defrule recalculate-b
+(defrule bounce-a-off-wall
+	(box-a ?ax ?ay ?awidth ?aheight)
+	?s <- (box-a-speed ?aspeed)
+	(drawing)
+	(done)
+	(pause FALSE)
+	(window-should-close FALSE)
+	(test (or
+		(and (> ?aspeed 0) (>= ?ax (- (raylib-get-screen-width) ?awidth)))
+		(and (< ?aspeed 0) (<= ?ax 0))))
+	=>
+	(retract ?s)
+	(assert (box-a-speed (* -1 ?aspeed))))
+
+(defrule recalculate-box-positions
+	?a <- (box-a ?ax ?ay ?awidth ?aheight)
 	?b <- (box-b ?bx ?by ?bwidth ?bheight)
+	(box-a-speed ?aspeed)
 	?d <- (drawing)
 	?dd <- (done)
 	?p <- (pause FALSE)
 	(window-should-close FALSE)
+	(test (or
+		(and (> ?aspeed 0) (< ?ax (- (raylib-get-screen-width) ?awidth)))
+		(and (< ?aspeed 0) (> ?ax 0))))
 	=>
-	(retract ?b ?d ?dd ?p)
+	(retract ?a ?b ?d ?dd ?p)
 	(assert
 		(pause (raylib-is-key-pressed KEY_SPACE))
+		(box-a
+			(+ ?ax ?aspeed)
+			?ay
+			?awidth
+			?aheight)
 		(box-b
 			(integer (- (raylib-get-mouse-x) (/ ?bwidth 2)))
 			(integer (- (raylib-get-mouse-y) (/ ?bheight 2)))
@@ -128,6 +152,6 @@
 	(raylib-close-window)
 	(exit))
 
-(watch all)
+;(watch all)
 (reset)
 (run)
