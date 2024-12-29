@@ -1019,6 +1019,22 @@ void RaylibGetMouseDelta(
 	MBDispose(mb);
 }
 
+void RaylibGetMouseX(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	returnValue->integerValue = CreateInteger(theEnv, GetMouseX());
+}
+
+void RaylibGetMouseY(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	returnValue->integerValue = CreateInteger(theEnv, GetMouseY());
+}
+
 void RaylibIsMouseButtonPressed(
 		Environment *theEnv,
 		UDFContext *context,
@@ -2433,6 +2449,230 @@ void RaylibDrawFPS(
 }
 
 
+void RaylibCheckCollisionRecs(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	Rectangle rec1, rec2;
+	float rec1x, rec1y, rec1width, rec1height, rec2x, rec2y, rec2width, rec2height;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1height = theArg.floatValue->contents;
+			break;
+	}
+
+	rec1 = (Rectangle){ rec1x, rec1y, rec1width, rec1height };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2height = theArg.floatValue->contents;
+			break;
+	}
+
+	rec2 = (Rectangle){ rec2x, rec2y, rec2width, rec2height };
+
+	if (CheckCollisionRecs(rec1, rec2))
+	{
+		returnValue->lexemeValue = TrueSymbol(theEnv);
+	}
+	else
+	{
+		returnValue->lexemeValue = FalseSymbol(theEnv);
+	}
+}
+
+void RaylibGetCollisionRec(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	Rectangle rec1, rec2, collision;
+	float rec1x, rec1y, rec1width, rec1height, rec2x, rec2y, rec2width, rec2height;
+	MultifieldBuilder *mb;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1height = theArg.floatValue->contents;
+			break;
+	}
+
+	rec1 = (Rectangle){ rec1x, rec1y, rec1width, rec1height };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2height = theArg.floatValue->contents;
+			break;
+	}
+
+	rec2 = (Rectangle){ rec2x, rec2y, rec2width, rec2height };
+
+	collision = GetCollisionRec(rec1, rec2);
+	mb = CreateMultifieldBuilder(theEnv, 4);
+	MBAppendFloat(mb, collision.x);
+	MBAppendFloat(mb, collision.y);
+	MBAppendFloat(mb, collision.width);
+	MBAppendFloat(mb, collision.height);
+
+	returnValue->multifieldValue = MBCreate(mb);
+
+	MBDispose(mb);
+}
+
+void RaylibMeasureText(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	const char *text;
+
+	UDFNextArgument(context,STRING_BIT,&theArg);
+	text = theArg.lexemeValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	returnValue->integerValue = CreateInteger(theEnv, MeasureText(text, theArg.integerValue->contents));
+}
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -2453,6 +2693,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-begin-drawing","v",0,0,NULL,RaylibBeginDrawing,"RaylibBeginDrawing",NULL);
 	  AddUDF(env,"raylib-clear-background","v",1,1,";y",RaylibClearBackground,"RaylibClearBackground",NULL);
 	  AddUDF(env,"raylib-draw-text","v",5,5,";s;l;l;l;y",RaylibDrawText,"RaylibDrawText",NULL);
+	  AddUDF(env,"raylib-measure-text","l",2,2,";s;l",RaylibMeasureText,"RaylibMeasureText",NULL);
 	  AddUDF(env,"raylib-end-drawing","v",0,0,NULL,RaylibEndDrawing,"RaylibEndDrawing",NULL);
 	  AddUDF(env,"raylib-close-window","v",0,0,NULL,RaylibCloseWindow,"RaylibCloseWindow",NULL);
 	  AddUDF(env,"raylib-draw-circle","v",4,4,";l;l;dl;y",RaylibDrawCircle,"RaylibDrawCircle",NULL);
@@ -2468,6 +2709,8 @@ void UserFunctions(
 	  AddUDF(env,"raylib-fade","m",2,5,";ly;dl;l;l;d",RaylibFade,"RaylibFade",NULL);
 	  AddUDF(env,"raylib-get-mouse-position","m",0,0,NULL,RaylibGetMousePosition,"RaylibGetMousePosition",NULL);
 	  AddUDF(env,"raylib-get-mouse-delta","m",0,0,NULL,RaylibGetMouseDelta,"RaylibGetMouseDelta",NULL);
+	  AddUDF(env,"raylib-get-mouse-x","d",0,0,NULL,RaylibGetMouseX,"RaylibGetMouseX",NULL);
+	  AddUDF(env,"raylib-get-mouse-y","d",0,0,NULL,RaylibGetMouseY,"RaylibGetMouseY",NULL);
 	  AddUDF(env,"raylib-get-render-height","l",0,0,NULL,RaylibGetRenderHeight,"RaylibGetRenderHeight",NULL);
 	  AddUDF(env,"raylib-get-render-width","l",0,0,NULL,RaylibGetRenderWidth,"RaylibGetRenderWidth",NULL);
 	  AddUDF(env,"raylib-get-screen-height","l",0,0,NULL,RaylibGetScreenHeight,"RaylibGetScreenHeight",NULL);
@@ -2495,4 +2738,7 @@ void UserFunctions(
 
 	  AddUDF(env,"raylib-gui-check-box","b",6,6,";dl;dl;dl;dl;s;b",RaylibGuiCheckBox,"RaylibGuiCheckBox",NULL);
 	  AddUDF(env,"raylib-gui-slider-bar","d",9,9,";dl;dl;dl;dl;s;s;d;d;d",RaylibGuiSliderBar,"RaylibGuiSliderBar",NULL);
+
+	  AddUDF(env,"raylib-check-collision-recs","b",8,8,"dl",RaylibCheckCollisionRecs,"RaylibCheckCollisionRecs",NULL);
+	  AddUDF(env,"raylib-get-collision-rec","m",8,8,"dl",RaylibGetCollisionRec,"RaylibGetCollisionRec",NULL);
   }
