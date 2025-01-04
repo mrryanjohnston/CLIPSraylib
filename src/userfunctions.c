@@ -595,21 +595,50 @@ void RaylibDrawRectangleLines(
 		UDFValue *returnValue)
 {
 	int r, g, b, a;
-	long long positionx, positiony, width, height;
+	long long x, y, width, height;
 	Color color;
 	UDFValue theArg;
 
-	UDFNextArgument(context,INTEGER_BIT,&theArg);
-	positionx = theArg.integerValue->contents;
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			x = theArg.floatValue->contents;
+			break;
+	}
 
-	UDFNextArgument(context,INTEGER_BIT,&theArg);
-	positiony = theArg.integerValue->contents;
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	y = theArg.integerValue->contents;
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			y = theArg.floatValue->contents;
+			break;
+	}
 
-	UDFNextArgument(context,INTEGER_BIT,&theArg);
-	width = theArg.integerValue->contents;
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			width = theArg.floatValue->contents;
+			break;
+	}
 
-	UDFNextArgument(context,INTEGER_BIT,&theArg);
-	height = theArg.integerValue->contents;
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			height = theArg.floatValue->contents;
+			break;
+	}
 
 	if (UDFArgumentCount(context) == 5)
 	{
@@ -652,7 +681,7 @@ void RaylibDrawRectangleLines(
 		return;
 	}
 
-	DrawRectangleLines(positionx, positiony, width, height, color);
+	DrawRectangleLines(x, y, width, height, color);
 }
 
 void RaylibDrawRectangleRounded(
@@ -2712,6 +2741,260 @@ void RaylibMeasureText(
 	returnValue->integerValue = CreateInteger(theEnv, MeasureText(text, theArg.integerValue->contents));
 }
 
+void RaylibLoadTexture(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	Texture2D texture;
+	MultifieldBuilder *mb;
+
+	UDFNextArgument(context,STRING_BIT,&theArg);
+	texture = LoadTexture(theArg.lexemeValue->contents);
+
+	mb = CreateMultifieldBuilder(theEnv, 5);
+	MBAppendInteger(mb, texture.id);
+	MBAppendInteger(mb, texture.width);
+	MBAppendInteger(mb, texture.height);
+	MBAppendInteger(mb, texture.mipmaps);
+	MBAppendInteger(mb, texture.format);
+	returnValue->multifieldValue = MBCreate(mb);
+	MBDispose(mb);
+}
+
+void RaylibDrawTexture(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+        unsigned int id;
+        int width, height, mipmaps, format, r, g, b, a;
+	float positionx, positiony;
+	Color color;
+	Texture texture;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture){ id, width, height, mipmaps, format };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positionx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positionx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positiony = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positiony = theArg.floatValue->contents;
+			break;
+	}
+
+	if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-texture's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 11)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-tecture must have either 8 or 11 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawTexture(texture, positionx, positiony, color);
+}
+
+void RaylibDrawTextureRec(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+        unsigned int id;
+        int width, height, mipmaps, format, r, g, b, a;
+	float recx, recy, recwidth, recheight, positionx, positiony;
+	Color color;
+	Vector2 position;
+	Rectangle rectangle;
+	Texture texture;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture){ id, width, height, mipmaps, format };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recy = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recy = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recwidth = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recwidth = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recheight = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recheight = theArg.floatValue->contents;
+			break;
+	}
+
+	rectangle = (Rectangle){recx, recy, recwidth, recheight};
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positionx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positionx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positiony = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positiony = theArg.floatValue->contents;
+			break;
+	}
+
+	position = (Vector2){positionx, positiony};
+
+	if (UDFArgumentCount(context) == 12)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-texture-rec's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 15)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-tecture-rec must have either 12 or 15 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawTextureRec(texture, rectangle, position, color);
+}
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -2740,7 +3023,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-draw-circle-v","v",4,7,";dl;dl;dl;lmy;l;l;l",RaylibDrawCircleV,"RaylibDrawCircleV",NULL);
 	  AddUDF(env,"raylib-draw-line","v",5,8,";l;l;l;l;lmy;l;l;l",RaylibDrawLine,"RaylibDrawLine",NULL);
 	  AddUDF(env,"raylib-draw-rectangle","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangle,"RaylibDrawRectangle",NULL);
-	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
+	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,8,";dl;dl;dl;dl;lmy;l;l;l",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded","v",7,10,";dl;dl;dl;dl;dl;l;dmy;l;l;l",RaylibDrawRectangleRounded,"RaylibDrawRectangleRounded",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded-lines","v",7,10,";dl;dl;dl;dl;dl;l;lmy;l;l;l",RaylibDrawRectangleRoundedLines,"RaylibDrawRectangleRoundedLines",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded-lines-ex","v",8,11,";dl;dl;dl;dl;dl;l;dl;lmy;l;l;l",RaylibDrawRectangleRoundedLinesEx,"RaylibDrawRectangleRoundedLinesEx",NULL);
@@ -2780,4 +3063,8 @@ void UserFunctions(
 
 	  AddUDF(env,"raylib-check-collision-recs","b",8,8,"dl",RaylibCheckCollisionRecs,"RaylibCheckCollisionRecs",NULL);
 	  AddUDF(env,"raylib-get-collision-rec","m",8,8,"dl",RaylibGetCollisionRec,"RaylibGetCollisionRec",NULL);
+
+	  AddUDF(env,"raylib-load-texture","m",1,1,"s",RaylibLoadTexture,"RaylibLoadTexture",NULL);
+	  AddUDF(env,"raylib-draw-texture","v",8,11,";dl;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTexture,"RaylibDrawTexture",NULL);
+	  AddUDF(env,"raylib-draw-texture-rec","v",12,15,";l;l;l;l;l;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTextureRec,"RaylibDrawTextureRec",NULL);
   }
