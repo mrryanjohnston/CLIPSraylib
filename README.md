@@ -1,3 +1,5 @@
+![CLIPSraylib3](https://github.com/user-attachments/assets/092ab906-0266-4462-82dc-9eb335ba2609)
+
 # CLIPSraylib
 
 Using
@@ -5,8 +7,6 @@ Using
 and
 [raylib](https://www.raylib.com/)
 to build videogames.
-
-![2d-platformer-CLIPSraylib](https://github.com/user-attachments/assets/52a75193-6ff8-40bd-8c70-83ceddcb7b68)
 
 ## Description
 
@@ -33,7 +33,9 @@ program-report-mouse-no-time.bat
 
 `program-2d-camera-platformer.bat` attempts to recreate
 [this example](https://www.raylib.com/examples/core/loader.html?name=core_automation_events)
-from the raylib website.
+from the raylib website and looks like this:
+
+![2d-platformer-CLIPSraylib](https://github.com/user-attachments/assets/52a75193-6ff8-40bd-8c70-83ceddcb7b68)
 
 ## Running the examples
 
@@ -74,3 +76,11 @@ CLIPS> (raylib-end-drawing)
 
 This should update your window by turning the background sky blue
 and writing the text "Live interaction with your GUI!" in red.
+
+# License information for logo
+
+This logo was created in GIMP and is based on the CLIPS logo
+and the [raylib logo](https://commons.wikimedia.org/wiki/File:Raylib_logo.png).
+The raylib logo is covered by the
+[Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/deed.en)
+license.
