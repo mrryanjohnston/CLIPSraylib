@@ -15,6 +15,7 @@ that expose C-level raylib functions to a CLIPS rules engine.
 See the files in the `examples` directory:
 
 ```
+textures-fog-of-war.bat
 textures-sprite-anim.bat
 shapes-bouncing-ball.bat
 shapes-collision-area.bat

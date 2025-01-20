@@ -150,6 +150,8 @@ void str_to_color(const char *str, Color *color)
 		*color = MAGENTA;
 	} else if (strncmp("RAYWHITE", str, 8) == 0) {
 		*color = RAYWHITE;
+	} else if (strncmp("BLANK", str, 5) == 0) {
+		*color = BLANK;
 	} else {
 		*color = BLACK;
 	}
@@ -464,7 +466,6 @@ void RaylibDrawLine(
 	long long startpositionx, startpositiony, endpositionx, endpositiony;
 	int r, g, b, a;
 	Color color;
-	Multifield mf;
 	UDFValue theArg;
 
 	UDFNextArgument(context,INTEGER_BIT,&theArg);
@@ -2763,6 +2764,44 @@ void RaylibLoadTexture(
 	MBDispose(mb);
 }
 
+void RaylibLoadRenderTexture(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	int width, height;
+	RenderTexture2D texture;
+	MultifieldBuilder *mb;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	texture = LoadRenderTexture(width, height);
+
+	mb = CreateMultifieldBuilder(theEnv, 11);
+
+	MBAppendInteger(mb, texture.id);
+
+	MBAppendInteger(mb, texture.texture.id);
+	MBAppendInteger(mb, texture.texture.width);
+	MBAppendInteger(mb, texture.texture.height);
+	MBAppendInteger(mb, texture.texture.mipmaps);
+	MBAppendInteger(mb, texture.texture.format);
+
+	MBAppendInteger(mb, texture.depth.id);
+	MBAppendInteger(mb, texture.depth.width);
+	MBAppendInteger(mb, texture.depth.height);
+	MBAppendInteger(mb, texture.depth.mipmaps);
+	MBAppendInteger(mb, texture.depth.format);
+
+	returnValue->multifieldValue = MBCreate(mb);
+	MBDispose(mb);
+}
+
 void RaylibDrawTexture(
 		Environment *theEnv,
 		UDFContext *context,
@@ -2995,6 +3034,326 @@ void RaylibDrawTextureRec(
 	DrawTextureRec(texture, rectangle, position, color);
 }
 
+void RaylibDrawTexturePro(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+        unsigned int id;
+        int width, height, mipmaps, format, r, g, b, a;
+	float rec1x, rec1y, rec1width, rec1height, rec2x, rec2y, rec2width, rec2height, originx, originy, rotation;
+	Color color;
+	Vector2 origin;
+	Rectangle rectangle1, rectangle2;
+	Texture texture;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture){ id, width, height, mipmaps, format };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec1height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec1height = theArg.floatValue->contents;
+			break;
+	}
+
+	rectangle1 = (Rectangle){rec1x, rec1y, rec1width, rec1height};
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2y = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rec2height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rec2height = theArg.floatValue->contents;
+			break;
+	}
+
+	rectangle2 = (Rectangle){rec2x, rec2y, rec2width, rec2height};
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			originx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			originx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			originy = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			originy = theArg.floatValue->contents;
+			break;
+	}
+
+	origin = (Vector2){originx, originy};
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rotation = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rotation = theArg.floatValue->contents;
+			break;
+	}
+
+	if (UDFArgumentCount(context) == 17)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-texture-rec's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 20)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-tecture-pro must have either 17 or 20 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawTexturePro(texture, rectangle1, rectangle2, origin, rotation, color);
+}
+
+
+void RaylibSetTextureFilter(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+        unsigned int id;
+        int width, height, mipmaps, format, filter;
+	Texture2D texture;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture2D){ id, width, height, mipmaps, format };
+
+	UDFNextArgument(context,SYMBOL_BIT,&theArg);
+	if (strncmp("TEXTURE_FILTER_POINT", theArg.lexemeValue->contents, 20) == 0)
+	{
+		filter = TEXTURE_FILTER_POINT;
+	}
+	else
+	if (strncmp("TEXTURE_FILTER_BILINEAR", theArg.lexemeValue->contents, 23) == 0)
+	{
+		filter = TEXTURE_FILTER_BILINEAR;
+	}
+	else
+	if (strncmp("TEXTURE_FILTER_TRILINEAR", theArg.lexemeValue->contents, 24) == 0)
+	{
+		filter = TEXTURE_FILTER_TRILINEAR;
+	}
+	else
+	if (strncmp("TEXTURE_FILTER_ANISOTROPIC_4X", theArg.lexemeValue->contents, 29) == 0)
+	{
+		filter = TEXTURE_FILTER_ANISOTROPIC_4X;
+	}
+	else
+	if (strncmp("TEXTURE_FILTER_ANISOTROPIC_8X", theArg.lexemeValue->contents, 29) == 0)
+	{
+		filter = TEXTURE_FILTER_ANISOTROPIC_8X;
+	}
+	else
+	if (strncmp("TEXTURE_FILTER_ANISOTROPIC_16X", theArg.lexemeValue->contents, 30) == 0)
+	{
+		filter = TEXTURE_FILTER_ANISOTROPIC_16X;
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-set-texture-filter's last argument must be TEXTURE_FILTER_POINT, TEXTURE_FILTER_BILINEAR, TEXTURE_FILTER_TRILINEAR, TEXTURE_FILTER_ANISOTROPIC_4X, TEXTURE_FILTER_ANISOTROPIC_8X, or TEXTURE_FILTER_ANISOTROPIC_16X");
+		UDFThrowError(context);
+		return;
+	}
+	SetTextureFilter(texture, filter);
+}
+
+void RaylibBeginTextureMode(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	unsigned int id, textureid, depthid;
+	int width, height, mipmaps, format, depthwidth, depthheight, depthmipmaps, depthformat;
+	Texture2D texture, depth;
+	RenderTexture2D render_texture;
+	MultifieldBuilder *mb;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	textureid = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture2D){ textureid, width, height, mipmaps, format };
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthid = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthwidth = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthheight = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthmipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthformat = theArg.integerValue->contents;
+
+	depth = (Texture2D){ depthid, depthwidth, depthheight, depthmipmaps, depthformat };
+
+	render_texture = (RenderTexture2D) { id, texture, depth };
+
+	BeginTextureMode(render_texture);
+}
+
+void RaylibEndTextureMode(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	EndTextureMode();
+}
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -3065,6 +3424,11 @@ void UserFunctions(
 	  AddUDF(env,"raylib-get-collision-rec","m",8,8,"dl",RaylibGetCollisionRec,"RaylibGetCollisionRec",NULL);
 
 	  AddUDF(env,"raylib-load-texture","m",1,1,"s",RaylibLoadTexture,"RaylibLoadTexture",NULL);
+	  AddUDF(env,"raylib-load-render-texture","m",2,2,"l",RaylibLoadRenderTexture,"RaylibLoadRenderTexture",NULL);
 	  AddUDF(env,"raylib-draw-texture","v",8,11,";dl;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTexture,"RaylibDrawTexture",NULL);
 	  AddUDF(env,"raylib-draw-texture-rec","v",12,15,";l;l;l;l;l;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTextureRec,"RaylibDrawTextureRec",NULL);
+	  AddUDF(env,"raylib-draw-texture-pro","v",17,20,";l;l;l;l;l;dl;dl;dl;dl;dl;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTexturePro,"RaylibDrawTexturePro",NULL);
+	  AddUDF(env,"raylib-set-texture-filter","v",6,6,";l;l;l;l;l;ly",RaylibSetTextureFilter,"RaylibSetTextureFilter",NULL);
+	  AddUDF(env,"raylib-begin-texture-mode","v",11,11,"l",RaylibBeginTextureMode,"RaylibBeginTextureMode",NULL);
+	  AddUDF(env,"raylib-end-texture-mode","v",0,0,NULL,RaylibEndTextureMode,"RaylibEndTextureMode",NULL);
   }
