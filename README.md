@@ -16,6 +16,7 @@ See the files in the `examples` directory:
 
 ```
 textures-fog-of-war.bat
+textures-multiple-sprite-anim.bat
 textures-sprite-anim.bat
 shapes-bouncing-ball.bat
 shapes-collision-area.bat

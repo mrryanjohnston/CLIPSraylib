@@ -2621,6 +2621,90 @@ void RaylibCheckCollisionRecs(
 	}
 }
 
+void RaylibCheckCollisionPointRec(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	Rectangle rec;
+	Vector2 vec;
+	float recx, recy, recwidth, recheight, x, y;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			x = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			x = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			y = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			y = theArg.floatValue->contents;
+			break;
+	}
+
+	vec = (Vector2){ x, y };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recy = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recy = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recwidth = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recwidth = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			recheight = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			recheight = theArg.floatValue->contents;
+			break;
+	}
+
+	rec = (Rectangle){ recx, recy, recwidth, recheight };
+
+	if (CheckCollisionPointRec(vec, rec))
+	{
+		returnValue->lexemeValue = TrueSymbol(theEnv);
+	}
+	else
+	{
+		returnValue->lexemeValue = FalseSymbol(theEnv);
+	}
+}
+
 void RaylibGetCollisionRec(
 		Environment *theEnv,
 		UDFContext *context,
@@ -3421,6 +3505,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-gui-slider-bar","d",9,9,";dl;dl;dl;dl;s;s;d;d;d",RaylibGuiSliderBar,"RaylibGuiSliderBar",NULL);
 
 	  AddUDF(env,"raylib-check-collision-recs","b",8,8,"dl",RaylibCheckCollisionRecs,"RaylibCheckCollisionRecs",NULL);
+	  AddUDF(env,"raylib-check-collision-point-rec","b",6,6,"dl",RaylibCheckCollisionPointRec,"RaylibCheckCollisionPointRec",NULL);
 	  AddUDF(env,"raylib-get-collision-rec","m",8,8,"dl",RaylibGetCollisionRec,"RaylibGetCollisionRec",NULL);
 
 	  AddUDF(env,"raylib-load-texture","m",1,1,"s",RaylibLoadTexture,"RaylibLoadTexture",NULL);
