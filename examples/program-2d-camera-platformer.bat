@@ -1,5 +1,3 @@
-(watch rules)
-
 (deffacts cameras
 	(camera center)
 	(camera center center-inside-map)
@@ -111,13 +109,14 @@
 	(frame-time ?time)
 	(gravity ?gravity)
 	(not 
-		(surface ?surfacex ?surfacey
+		(surface ?surfacex
+			?surfacey
+				&:(>= ?surfacey ?playery)
+				&:(<= ?surfacey (+ ?playery (* ?ydelta ?time)))
 			?width
 				&:(<= ?surfacex ?playerx)
 				&:(>= (+ ?surfacex ?width) ?playerx)
-			?height
-				&:(>= ?surfacey ?playery)
-				&:(< ?surfacey (+ ?playery (* ?ydelta ?time)))))
+			?))
 	(not (new-player-y-delta ?))
 	(not (test (check-if-should-exit ?time)))
 	=>
@@ -125,10 +124,31 @@
 		(new-player-y (+ ?playery (* ?ydelta ?time)))
 		(new-player-y-delta (+ ?ydelta (* ?time ?gravity)))))
 
+(defrule land
+	?player <- (player
+		(x ?playerx)
+		(y ?playery)
+		(y-delta ?ydelta&:(> ?ydelta 0)))
+	(frame-time ?time)
+	(surface ?surfacex
+		?surfacey
+			&:(>= (+ ?playery (* ?ydelta ?time)) ?surfacey)
+		?width
+			&:(<= ?surfacex ?playerx)
+			&:(>= (+ ?surfacex ?width) ?playerx)
+		?)
+	(not (new-player-y-delta ?))
+	(not (test (check-if-should-exit ?time)))
+	=>
+	(assert
+		(new-player-y ?surfacey)
+		(new-player-y-delta 0)))
+
 (defrule on-the-ground
 	?player <- (player
 		(x ?playerx)
-		(y ?playery))
+		(y ?playery)
+		(y-delta 0))
 	(frame-time ?time)
 	(surface ?surfacex ?playery
 		?width
@@ -140,26 +160,6 @@
 	=>
 	(assert
 		(new-player-y ?playery)
-		(new-player-y-delta 0)))
-
-(defrule land
-	?player <- (player
-		(x ?playerx)
-		(y ?playery)
-		(y-delta ?ydelta))
-	(frame-time ?time)
-	(surface ?surfacex ?surfacey
-		?width
-			&:(<= ?surfacex ?playerx)
-			&:(>= (+ ?surfacex ?width) ?playerx)
-		?height
-			&:(>= ?surfacey ?playery)
-			&:(< ?surfacey (+ ?playery (* ?ydelta ?time))))
-	(not (new-player-y-delta ?))
-	(not (test (check-if-should-exit ?time)))
-	=>
-	(assert
-		(new-player-y ?surfacey)
 		(new-player-y-delta 0)))
 
 (defrule standing-still
