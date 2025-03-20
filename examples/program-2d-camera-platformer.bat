@@ -38,20 +38,6 @@
 (deffunction right-pressed (?time)
 	(raylib-is-key-down KEY_RIGHT))
 
-(deffunction check-if-should-exit (?delta)
-	(raylib-window-should-close))
-
-(defrule setup
-	(screen ?x ?y ?title)
-	=>
-	(raylib-init-window ?x ?y ?title)
-	(raylib-set-target-fps 60))
-
-(defrule begin
-	(not (frame-time ?))
-	=>
-	(assert (frame-time (raylib-get-frame-time))))
-
 ;(defrule c-pressed
 ;	(frame-time ?time)
 ;	(camera ?current)
@@ -74,8 +60,8 @@
 (defrule reset-player
 	?player <- (player)
 	(frame-time ?time)
+	(should-exit FALSE)
 	(test (r-pressed ?time))
-	(not (test (check-if-should-exit ?time)))
 	=>
 	(modify ?player
 		(x (deftemplate-slot-default-value player x))
@@ -88,14 +74,14 @@
 		(y-delta 0)
 		(jump-speed ?jump-speed))
 	(frame-time ?time)
-	(test (space-pressed ?time))
+	(should-exit FALSE)
 	(surface ?surfacex ?playery
 		?width
 			&:(<= ?surfacex ?playerx)
 			&:(>= (+ ?surfacex ?width) ?playerx)
 		?)
 	(not (new-player-y-delta ?))
-	(not (test (check-if-should-exit ?time)))
+	(test (space-pressed ?time))
 	=>
 	(assert
 		(new-player-y (+ ?playery (* -1 ?jump-speed ?time)))
@@ -108,6 +94,7 @@
 		(y-delta ?ydelta))
 	(frame-time ?time)
 	(gravity ?gravity)
+	(should-exit FALSE)
 	(not 
 		(surface ?surfacex
 			?surfacey
@@ -118,7 +105,6 @@
 				&:(>= (+ ?surfacex ?width) ?playerx)
 			?))
 	(not (new-player-y-delta ?))
-	(not (test (check-if-should-exit ?time)))
 	=>
 	(assert
 		(new-player-y (+ ?playery (* ?ydelta ?time)))
@@ -132,13 +118,14 @@
 	(frame-time ?time)
 	(surface ?surfacex
 		?surfacey
-			&:(>= (+ ?playery (* ?ydelta ?time)) ?surfacey)
+			&:(>= ?surfacey ?playery)
+			&:(<= ?surfacey (+ ?playery (* ?ydelta ?time)))
 		?width
 			&:(<= ?surfacex ?playerx)
 			&:(>= (+ ?surfacex ?width) ?playerx)
 		?)
+	(should-exit FALSE)
 	(not (new-player-y-delta ?))
-	(not (test (check-if-should-exit ?time)))
 	=>
 	(assert
 		(new-player-y ?surfacey)
@@ -155,8 +142,9 @@
 			&:(<= ?surfacex ?playerx)
 			&:(>= (+ ?surfacex ?width) ?playerx)
 		?)
+	(should-exit FALSE)
 	(not (new-player-y-delta ?))
-	(not (test (check-if-should-exit ?time)))
+	(test (not (space-pressed ?time)))
 	=>
 	(assert
 		(new-player-y ?playery)
@@ -166,6 +154,8 @@
 	?player <- (player
 		(x ?playerx))
 	(frame-time ?time)
+	(should-exit FALSE)
+	(not (new-player-x ?))
 	(test (or
 		(and
 			(not (left-pressed ?time))
@@ -173,8 +163,6 @@
 		(and
 			(left-pressed ?time)
 			(right-pressed ?time))))
-	(not (new-player-x ?))
-	(not (test (check-if-should-exit ?time)))
 	=>
 	(assert (new-player-x ?playerx)))
 
@@ -183,10 +171,10 @@
 		(x ?playerx)
 		(walk-speed ?walk-speed))
 	(frame-time ?time)
-	(test (left-pressed ?time))
+	(should-exit FALSE)
 	(not (test (right-pressed ?time)))
 	(not (new-player-x ?))
-	(not (test (check-if-should-exit ?time)))
+	(test (left-pressed ?time))
 	=>
 	(assert (new-player-x (- ?playerx (* ?time ?walk-speed)))))
 
@@ -195,10 +183,10 @@
 		(x ?playerx)
 		(walk-speed ?walk-speed))
 	(frame-time ?time)
-	(test (right-pressed ?time))
+	(should-exit FALSE)
 	(not (test (left-pressed ?time)))
 	(not (new-player-x ?))
-	(not (test (check-if-should-exit ?time)))
+	(test (right-pressed ?time))
 	=>
 	(assert (new-player-x (+ ?playerx (* ?time ?walk-speed)))))
 
@@ -209,7 +197,7 @@
 	?nyd <- (new-player-y-delta ?ydelta)
 	?f <- (frame-time ?time)
 	(camera center)
-	(not (test (check-if-should-exit ?time)))
+	(should-exit FALSE)
 	=>
 	(retract ?f ?nx ?ny ?nyd)
 	(modify ?player
@@ -232,11 +220,13 @@
 		(raylib-draw-text "- Mouse Wheel to Zoom in-out (not yet implemented), R to reset character" 40 80 10 DARKGRAY)
 		(raylib-draw-text "- C to change camera mode (not yet implemented)" 40 100 10 DARKGRAY)
 		(raylib-draw-text "Current camera mode:" 20 120 10 BLACK)
-	(raylib-end-drawing))
+	(raylib-end-drawing)
+	(assert
+		(frame-time (raylib-get-frame-time))
+		(should-exit (raylib-window-should-close))))
 
 (defrule die
-	(frame-time ?time)
-	(test (check-if-should-exit ?time))
+	(should-exit TRUE)
 	=>
 	(println "Done. Exiting...")
 	(raylib-close-window)
@@ -245,5 +235,10 @@
 (reset)
 (assert
 	(player)
-	(screen 800 450 "2D Camera Platformer"))
+	(frame-time 0)
+	(should-exit FALSE))
+(watch activations)
+(watch rules)
+(raylib-init-window 800 450 "2D Camera Platform")
+(raylib-set-target-fps 60)
 (run)
