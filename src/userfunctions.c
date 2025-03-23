@@ -1840,7 +1840,8 @@ void RaylibIsKeyPressed(
 			UDFNextArgument(context,SYMBOL_BIT,&theArg);
 			for (int x=0; x < 109; x++)
 			{
-				if (strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
+				if (strlen(KEY_STRINGS[x]) == strlen(theArg.lexemeValue->contents) &&
+					strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
 					IsKeyPressed(KEYS[x])) {
 					returnValue->lexemeValue = TrueSymbol(theEnv);
 					return;
@@ -1876,7 +1877,8 @@ void RaylibIsKeyPressedRepeat(
 			UDFNextArgument(context,SYMBOL_BIT,&theArg);
 			for (int x=0; x < 109; x++)
 			{
-				if (strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
+				if (strlen(KEY_STRINGS[x]) == strlen(theArg.lexemeValue->contents) &&
+					strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
 					IsKeyPressedRepeat(KEYS[x])) {
 					returnValue->lexemeValue = TrueSymbol(theEnv);
 					return;
@@ -1911,7 +1913,8 @@ void RaylibIsKeyDown(
 			UDFNextArgument(context,SYMBOL_BIT,&theArg);
 			for (int x=0; x < 109; x++)
 			{
-				if (strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
+				if (strlen(KEY_STRINGS[x]) == strlen(theArg.lexemeValue->contents) &&
+					strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
 					IsKeyDown(KEYS[x])) {
 					returnValue->lexemeValue = TrueSymbol(theEnv);
 					return;
@@ -1946,7 +1949,8 @@ void RaylibIsKeyReleased(
 			UDFNextArgument(context,SYMBOL_BIT,&theArg);
 			for (int x=0; x < 109; x++)
 			{
-				if (strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
+				if (strlen(KEY_STRINGS[x]) == strlen(theArg.lexemeValue->contents) &&
+					strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
 					IsKeyReleased(KEYS[x])) {
 					returnValue->lexemeValue = TrueSymbol(theEnv);
 					return;
@@ -1981,7 +1985,8 @@ void RaylibIsKeyUp(
 			UDFNextArgument(context,SYMBOL_BIT,&theArg);
 			for (int x=0; x < 109; x++)
 			{
-				if (strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
+				if (strlen(KEY_STRINGS[x]) == strlen(theArg.lexemeValue->contents) &&
+					strncmp(KEY_STRINGS[x], theArg.lexemeValue->contents, strlen(KEY_STRINGS[x])) == 0 &&
 					IsKeyUp(KEYS[x])) {
 					returnValue->lexemeValue = TrueSymbol(theEnv);
 					return;
