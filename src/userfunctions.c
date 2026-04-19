@@ -48,6 +48,7 @@
 /*                                                                         */
 /***************************************************************************/
 
+#include <errno.h>
 #include "clips.h"
 #include "raylib.h"
 #include "rlgl.h"
@@ -162,11 +163,35 @@ void RaylibClearBackground(
 		UDFContext *context,
 		UDFValue *returnValue)
 {
+	int r, g, b, a;
 	Color color;
 	UDFValue theArg;
 
-	UDFNextArgument(context,SYMBOL_BIT,&theArg);
-	str_to_color(theArg.lexemeValue->contents, &color);
+	UDFNextArgument(context,MULTIFIELD_BIT | SYMBOL_BIT,&theArg);
+	if (theArg.header->type == MULTIFIELD_TYPE)
+	{
+		if (theArg.multifieldValue->length != 4)
+		{
+			Writeln(theEnv, "raylib-clear-background's multifield arg must have exactly 4 elements");
+			UDFThrowError(context);
+			return;
+		}
+		r = theArg.multifieldValue->contents[0].integerValue->contents;
+		g = theArg.multifieldValue->contents[1].integerValue->contents;
+		b = theArg.multifieldValue->contents[2].integerValue->contents;
+		a = theArg.multifieldValue->contents[3].integerValue->contents;
+		color = (Color){ r, g, b, a };
+	}
+	else if (theArg.header->type == SYMBOL_TYPE)
+	{
+		str_to_color(theArg.lexemeValue->contents, &color);
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-clear-background's first arg must be a multifield or symbol");
+		UDFThrowError(context);
+		return;
+	}
 	ClearBackground(color);
 }
 
@@ -2816,6 +2841,28 @@ void RaylibGetCollisionRec(
 	MBDispose(mb);
 }
 
+void RaylibGetColor(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	MultifieldBuilder *mb;
+	Color color;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	color = GetColor(theArg.integerValue->contents);
+	mb = CreateMultifieldBuilder(theEnv, 4);
+	MBAppendInteger(mb, color.r);
+	MBAppendInteger(mb, color.g);
+	MBAppendInteger(mb, color.b);
+	MBAppendInteger(mb, color.a);
+
+	returnValue->multifieldValue = MBCreate(mb);
+
+	MBDispose(mb);
+}
+
 void RaylibMeasureText(
 		Environment *theEnv,
 		UDFContext *context,
@@ -2982,6 +3029,123 @@ void RaylibDrawTexture(
 	}
 
 	DrawTexture(texture, positionx, positiony, color);
+}
+
+void RaylibDrawTextureEx(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+        unsigned int id;
+        int width, height, mipmaps, format, r, g, b, a;
+	float positionx, positiony, rotation, scale;
+	Vector2 position;
+	Color color;
+	Texture texture;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture){ id, width, height, mipmaps, format };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positionx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positionx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positiony = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positiony = theArg.floatValue->contents;
+			break;
+	}
+
+	position = (Vector2){ positionx, positiony };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			rotation = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			rotation = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			scale = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			scale = theArg.floatValue->contents;
+			break;
+	}
+
+
+	if (UDFArgumentCount(context) == 10)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-texture's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 13)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-tecture-ex must have either 10 or 13 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawTextureEx(texture, position, rotation, scale, color);
 }
 
 void RaylibDrawTextureRec(
@@ -3443,6 +3607,64 @@ void RaylibEndTextureMode(
 	EndTextureMode();
 }
 
+void HexStringToIntUDF(
+		Environment *theEnv,
+		UDFContext  *context,
+		UDFValue   *out)
+{
+	UDFValue arg;
+
+	if (!UDFFirstArgument(context, STRING_BIT | SYMBOL_BIT, &arg)) {
+		Writeln(theEnv, "hex-string-to-int's first argument must be a string or symbol");
+		UDFThrowError(context);
+		return;
+	}
+
+	const char *str = arg.lexemeValue->contents;
+
+	if (str[0] == '\0')
+	{
+		Writeln(theEnv, "hex-string-to-int's first argument must be 8 or 10 chars long");
+		UDFThrowError(context);
+		return;
+	}
+
+	if (str[0] == '0' && str[1] != '\0' && (str[1] == 'x' || str[1] == 'X'))
+		str += 2;
+
+	if (str[0] == '\0')
+	{
+		Writeln(theEnv, "hex-string-to-int's first argument must be 8 or 10 chars long");
+		UDFThrowError(context);
+		return;
+	}
+
+	for (const char *p = str; *p != '\0'; p++)
+	{
+		if ((*p < '0' || *p > '9') &&
+				(*p < 'a' || *p > 'f') &&
+				(*p < 'A' || *p > 'F'))
+		{
+			Writeln(theEnv, "hex-string-to-int's first argument must be a hex value");
+			UDFThrowError(context);
+			return;
+		}
+	}
+
+	errno = 0;
+	char *end;
+	long long val = strtoll(str, &end, 16);
+
+	if (errno == ERANGE || end == str || *end != '\0')
+	{
+		Writeln(theEnv, "hex-string-to-int: Could not convert hex string to integer");
+		UDFThrowError(context);
+		return;
+	}
+
+	out->integerValue = CreateInteger(theEnv, val);
+}
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -3461,7 +3683,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-init-window","v",3,3,";l;l;s",RaylibInitWindow,"RaylibInitWindow",NULL);
 	  AddUDF(env,"raylib-window-should-close","b",0,0,NULL,RaylibWindowShouldClose,"RaylibWindowShouldClose",NULL);
 	  AddUDF(env,"raylib-begin-drawing","v",0,0,NULL,RaylibBeginDrawing,"RaylibBeginDrawing",NULL);
-	  AddUDF(env,"raylib-clear-background","v",1,1,";y",RaylibClearBackground,"RaylibClearBackground",NULL);
+	  AddUDF(env,"raylib-clear-background","v",1,1,";my",RaylibClearBackground,"RaylibClearBackground",NULL);
 	  AddUDF(env,"raylib-draw-text","v",5,8,";s;l;l;l;lmy;l;l;l",RaylibDrawText,"RaylibDrawText",NULL);
 	  AddUDF(env,"raylib-measure-text","l",2,2,";s;l",RaylibMeasureText,"RaylibMeasureText",NULL);
 	  AddUDF(env,"raylib-end-drawing","v",0,0,NULL,RaylibEndDrawing,"RaylibEndDrawing",NULL);
@@ -3512,13 +3734,17 @@ void UserFunctions(
 	  AddUDF(env,"raylib-check-collision-recs","b",8,8,"dl",RaylibCheckCollisionRecs,"RaylibCheckCollisionRecs",NULL);
 	  AddUDF(env,"raylib-check-collision-point-rec","b",6,6,"dl",RaylibCheckCollisionPointRec,"RaylibCheckCollisionPointRec",NULL);
 	  AddUDF(env,"raylib-get-collision-rec","m",8,8,"dl",RaylibGetCollisionRec,"RaylibGetCollisionRec",NULL);
+	  AddUDF(env,"raylib-get-color","m",1,1,"dl",RaylibGetColor,"RaylibGetColor",NULL);
 
 	  AddUDF(env,"raylib-load-texture","m",1,1,"s",RaylibLoadTexture,"RaylibLoadTexture",NULL);
 	  AddUDF(env,"raylib-load-render-texture","m",2,2,"l",RaylibLoadRenderTexture,"RaylibLoadRenderTexture",NULL);
 	  AddUDF(env,"raylib-draw-texture","v",8,11,";dl;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTexture,"RaylibDrawTexture",NULL);
+	  AddUDF(env,"raylib-draw-texture-ex","v",10,13,";l;l;l;l;l;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTextureEx,"RaylibDrawTextureEx",NULL);
 	  AddUDF(env,"raylib-draw-texture-rec","v",12,15,";l;l;l;l;l;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTextureRec,"RaylibDrawTextureRec",NULL);
 	  AddUDF(env,"raylib-draw-texture-pro","v",17,20,";l;l;l;l;l;dl;dl;dl;dl;dl;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTexturePro,"RaylibDrawTexturePro",NULL);
 	  AddUDF(env,"raylib-set-texture-filter","v",6,6,";l;l;l;l;l;ly",RaylibSetTextureFilter,"RaylibSetTextureFilter",NULL);
 	  AddUDF(env,"raylib-begin-texture-mode","v",11,11,"l",RaylibBeginTextureMode,"RaylibBeginTextureMode",NULL);
 	  AddUDF(env,"raylib-end-texture-mode","v",0,0,NULL,RaylibEndTextureMode,"RaylibEndTextureMode",NULL);
+
+	  AddUDF(env,"hex-string-to-int","l",1,1,"sy",HexStringToIntUDF,"HexStringToIntUDF",NULL);
   }

@@ -68,7 +68,7 @@ debug : clips
 
 release : CC = gcc
 release : CFLAGS = -std=c99 -O3 -fno-strict-aliasing
-release : LDLIBS = -lm -lraylib
+release : LDLIBS = -lm
 release : clips
 
 debug_cpp : CC = g++
@@ -89,11 +89,11 @@ release_cpp : clips
 
 .c.o :
 	$(CC) -c -lraylib -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
-	#$(CC) -c -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
+	#$(CC) -c -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -lX11 -D$(CLIPS_OS) $(CFLAGS) $(WARNINGS) $<
 
 clips : main.o libclips.a
 	$(CC) -o ../clips main.o -lraylib -L. -lclips $(LDLIBS)
-	#$(CC) -o ../clips main.o -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -lraylib -L. -lclips $(LDLIBS)
+	#$(CC) -o ../clips main.o -I$(HOME)/.local/usr/local/include -L$(HOME)/.local/usr/local/lib -L. -lclips -lraylib -lX11 $(LDLIBS)
 	
 libclips.a : $(OBJS)
 	rm -f $@   
