@@ -375,7 +375,7 @@ void RaylibDrawCircleV(
 
 	circle = (Vector2){ centerx, centery };
 
-	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
 	switch (theArg.header->type) {
 		case INTEGER_TYPE:
 			radius = 1.0f * theArg.integerValue->contents;
@@ -547,6 +547,105 @@ void RaylibDrawLine(
 	}
 
 	DrawLine(startpositionx, startpositiony, endpositionx, endpositiony, color);
+}
+
+void RaylibDrawLineV(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	float startpositionx, startpositiony, endpositionx, endpositiony;
+	int r, g, b, a;
+	Color color;
+	Vector2 startposition, endposition;
+	UDFValue theArg;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			startpositionx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			startpositionx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			startpositiony = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			startpositiony = theArg.floatValue->contents;
+			break;
+	}
+
+	startposition = (Vector2){ startpositionx, startpositiony };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			endpositionx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			endpositionx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			endpositiony = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			endpositiony = theArg.floatValue->contents;
+			break;
+	}
+
+	endposition = (Vector2){ endpositionx, endpositiony };
+
+	if (UDFArgumentCount(context) == 5)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-line-v's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 8)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-line-v must have either 5 or 8 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawLineV(startposition, endposition, color);
 }
 
 void RaylibDrawRectangle(
@@ -1127,6 +1226,14 @@ void RaylibGetMouseY(
 		UDFValue *returnValue)
 {
 	returnValue->integerValue = CreateInteger(theEnv, GetMouseY());
+}
+
+void RaylibGetMouseWheelMove(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	returnValue->floatValue = CreateFloat(theEnv, GetMouseWheelMove());
 }
 
 void RaylibIsMouseButtonPressed(
@@ -2863,6 +2970,125 @@ void RaylibGetColor(
 	MBDispose(mb);
 }
 
+void RaylibColorLerp(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	int r, g, b, a;
+	Color color1, color2, lerp;
+	float factor;
+	UDFValue theArg;
+	MultifieldBuilder *mb;
+
+	UDFNextArgument(context,MULTIFIELD_BIT | SYMBOL_BIT,&theArg);
+	if (theArg.header->type == MULTIFIELD_TYPE)
+	{
+		if (theArg.multifieldValue->length != 4)
+		{
+			Writeln(theEnv, "raylib-color-lerp's first multifield arg must have exactly 4 elements");
+			UDFThrowError(context);
+			return;
+		}
+		r = theArg.multifieldValue->contents[0].integerValue->contents;
+		g = theArg.multifieldValue->contents[1].integerValue->contents;
+		b = theArg.multifieldValue->contents[2].integerValue->contents;
+		a = theArg.multifieldValue->contents[3].integerValue->contents;
+		color1 = (Color){ r, g, b, a };
+	}
+	else if (theArg.header->type == SYMBOL_TYPE)
+	{
+		str_to_color(theArg.lexemeValue->contents, &color1);
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-color-lerp's first arg must be a multifield or symbol");
+		UDFThrowError(context);
+		return;
+	}
+
+	UDFNextArgument(context,MULTIFIELD_BIT | SYMBOL_BIT,&theArg);
+	if (theArg.header->type == MULTIFIELD_TYPE)
+	{
+		if (theArg.multifieldValue->length != 4)
+		{
+			Writeln(theEnv, "raylib-color-lerp's second multifield arg must have exactly 4 elements");
+			UDFThrowError(context);
+			return;
+		}
+		r = theArg.multifieldValue->contents[0].integerValue->contents;
+		g = theArg.multifieldValue->contents[1].integerValue->contents;
+		b = theArg.multifieldValue->contents[2].integerValue->contents;
+		a = theArg.multifieldValue->contents[3].integerValue->contents;
+		color2 = (Color){ r, g, b, a };
+	}
+	else if (theArg.header->type == SYMBOL_TYPE)
+	{
+		str_to_color(theArg.lexemeValue->contents, &color2);
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-color-lerp's second arg must be a multifield or symbol");
+		UDFThrowError(context);
+		return;
+	}
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	factor = theArg.floatValue->contents;
+
+	lerp = ColorLerp(color1, color2, factor);
+
+	mb = CreateMultifieldBuilder(theEnv, 4);
+	MBAppendInteger(mb,lerp.r);
+	MBAppendInteger(mb,lerp.g);
+	MBAppendInteger(mb,lerp.b);
+	MBAppendInteger(mb,lerp.a);
+
+	returnValue->multifieldValue = MBCreate(mb);
+
+	MBDispose(mb);
+}
+
+void RaylibLerp(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	float start, end, amount;
+	UDFValue theArg;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	start = theArg.floatValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	end = theArg.floatValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	amount = theArg.floatValue->contents;
+
+	returnValue->floatValue = CreateFloat(theEnv, Lerp(start, end, amount));
+}
+
+void RaylibClamp(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	float value, min, max;
+	UDFValue theArg;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	value = theArg.floatValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	min = theArg.floatValue->contents;
+
+	UDFNextArgument(context,FLOAT_BIT,&theArg);
+	max = theArg.floatValue->contents;
+
+	returnValue->floatValue = CreateFloat(theEnv, Clamp(value, min, max));
+}
+
 void RaylibMeasureText(
 		Environment *theEnv,
 		UDFContext *context,
@@ -3607,6 +3833,23 @@ void RaylibEndTextureMode(
 	EndTextureMode();
 }
 
+void RaylibGetRandomValue(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	int min, max;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	min = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	max = theArg.integerValue->contents;
+
+	returnValue->integerValue = CreateInteger(theEnv, GetRandomValue(min, max));
+}
+
 void HexStringToIntUDF(
 		Environment *theEnv,
 		UDFContext  *context,
@@ -3692,6 +3935,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-draw-circle-lines","v",4,4,";l;l;dl;y",RaylibDrawCircleLines,"RaylibDrawCircleLines",NULL);
 	  AddUDF(env,"raylib-draw-circle-v","v",4,7,";dl;dl;dl;lmy;l;l;l",RaylibDrawCircleV,"RaylibDrawCircleV",NULL);
 	  AddUDF(env,"raylib-draw-line","v",5,8,";l;l;l;l;lmy;l;l;l",RaylibDrawLine,"RaylibDrawLine",NULL);
+	  AddUDF(env,"raylib-draw-line-v","v",5,8,";dl;dl;dl;dl;lmy;l;l;l",RaylibDrawLineV,"RaylibDrawLineV",NULL);
 	  AddUDF(env,"raylib-draw-rectangle","v",5,8,";l;l;l;l;dmy;l;l;l",RaylibDrawRectangle,"RaylibDrawRectangle",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-lines","v",5,8,";dl;dl;dl;dl;lmy;l;l;l",RaylibDrawRectangleLines,"RaylibDrawRectangleLines",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded","v",7,10,";dl;dl;dl;dl;dl;l;dmy;l;l;l",RaylibDrawRectangleRounded,"RaylibDrawRectangleRounded",NULL);
@@ -3703,6 +3947,7 @@ void UserFunctions(
 	  AddUDF(env,"raylib-get-mouse-delta","m",0,0,NULL,RaylibGetMouseDelta,"RaylibGetMouseDelta",NULL);
 	  AddUDF(env,"raylib-get-mouse-x","d",0,0,NULL,RaylibGetMouseX,"RaylibGetMouseX",NULL);
 	  AddUDF(env,"raylib-get-mouse-y","d",0,0,NULL,RaylibGetMouseY,"RaylibGetMouseY",NULL);
+	  AddUDF(env,"raylib-get-mouse-wheel-move","d",0,0,NULL,RaylibGetMouseWheelMove,"RaylibGetMouseWheelMove",NULL);
 	  AddUDF(env,"raylib-get-render-height","l",0,0,NULL,RaylibGetRenderHeight,"RaylibGetRenderHeight",NULL);
 	  AddUDF(env,"raylib-get-render-width","l",0,0,NULL,RaylibGetRenderWidth,"RaylibGetRenderWidth",NULL);
 	  AddUDF(env,"raylib-get-screen-height","l",0,0,NULL,RaylibGetScreenHeight,"RaylibGetScreenHeight",NULL);
@@ -3736,6 +3981,11 @@ void UserFunctions(
 	  AddUDF(env,"raylib-get-collision-rec","m",8,8,"dl",RaylibGetCollisionRec,"RaylibGetCollisionRec",NULL);
 	  AddUDF(env,"raylib-get-color","m",1,1,"dl",RaylibGetColor,"RaylibGetColor",NULL);
 
+	  AddUDF(env,"raylib-color-lerp","m",3,3,";my;my;dl",RaylibColorLerp,"RaylibColorLerp",NULL);
+
+	  AddUDF(env,"raylib-clamp","d",3,3,"dl",RaylibClamp,"RaylibClamp",NULL);
+	  AddUDF(env,"raylib-lerp","d",3,3,"dl",RaylibLerp,"RaylibLerp",NULL);
+
 	  AddUDF(env,"raylib-load-texture","m",1,1,"s",RaylibLoadTexture,"RaylibLoadTexture",NULL);
 	  AddUDF(env,"raylib-load-render-texture","m",2,2,"l",RaylibLoadRenderTexture,"RaylibLoadRenderTexture",NULL);
 	  AddUDF(env,"raylib-draw-texture","v",8,11,";dl;dl;dl;dl;dl;dl;dl;dlmy;dl;dl;dl",RaylibDrawTexture,"RaylibDrawTexture",NULL);
@@ -3745,6 +3995,8 @@ void UserFunctions(
 	  AddUDF(env,"raylib-set-texture-filter","v",6,6,";l;l;l;l;l;ly",RaylibSetTextureFilter,"RaylibSetTextureFilter",NULL);
 	  AddUDF(env,"raylib-begin-texture-mode","v",11,11,"l",RaylibBeginTextureMode,"RaylibBeginTextureMode",NULL);
 	  AddUDF(env,"raylib-end-texture-mode","v",0,0,NULL,RaylibEndTextureMode,"RaylibEndTextureMode",NULL);
+
+	  AddUDF(env,"raylib-get-random-value","l",2,2,";d;d",RaylibGetRandomValue,"RaylibGetRandomValue",NULL);
 
 	  AddUDF(env,"hex-string-to-int","l",1,1,"sy",HexStringToIntUDF,"HexStringToIntUDF",NULL);
   }
