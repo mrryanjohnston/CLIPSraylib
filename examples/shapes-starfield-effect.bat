@@ -78,7 +78,7 @@
 	(assert (star)))
 
 (defrule get-frame-time
-	(speed ?speed)
+	(speed ?speed&:(>= ?speed 0.0)&:(<= ?speed 2.0))
 	(not (frame-time ?))
 	(not (star
 		(screen-x ?star-screen-x)
