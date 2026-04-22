@@ -78,10 +78,8 @@
 	(assert (star)))
 
 (defrule get-frame-time
-	(speed ?speed&:(>= ?speed 0.0)&:(<= ?speed 2.0))
-	(is-spacebar-pressed FALSE)
-	(mouse-wheel-move 0.0)
-	(window-should-close FALSE)
+	(speed ?speed)
+	(not (frame-time ?))
 	(not (star
 		(screen-x ?star-screen-x)
 		(screen-y ?star-screen-y)
