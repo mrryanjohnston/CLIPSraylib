@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*             CLIPS Version 6.40  07/02/18            */
+   /*             CLIPS Version 6.42  03/02/24            */
    /*                                                     */
    /*              FACTS MANAGER HEADER FILE              */
    /*******************************************************/
@@ -73,6 +73,9 @@
 /*                                                           */
 /*            Pretty print functions accept optional logical */
 /*            name argument.                                 */
+/*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
 /*                                                           */
 /*************************************************************/
 
@@ -193,7 +196,6 @@ struct factsData
    bool WatchFacts;
 #endif
    Fact DummyFact;
-   Fact *GarbageFacts;
    Fact *LastFact;
    Fact *FactList;
    long long NextFactIndex;
@@ -316,6 +318,8 @@ struct factsData
    ModifyCallFunctionItem        *RemoveModifyFunctionFromCallList(Environment *,const char *,
                                                                    ModifyCallFunctionItem *,bool *);
    void                           DeallocateModifyCallList(Environment *,ModifyCallFunctionItem *);
+   void                           AddToGarbageFactList(Environment *,Fact *);
+   void                           RemoveGarbageFacts(Environment *);
 
 #endif /* _H_factmngr */
 

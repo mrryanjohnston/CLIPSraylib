@@ -22,8 +22,7 @@
 	(slot screen-y (default 0))
 	(slot z (default 1.0))
 	(slot dt (default -0))
-	(slot t (default -0))
-	(slot drawn (default FALSE)))
+	(slot t (default -0)))
 
 (defrule adjust-speed-when-mouse-wheel-moved
 	?m <- (mouse-wheel-move ?moved&~0.0)
@@ -64,18 +63,32 @@
 		(draw Circles)
 		(is-spacebar-pressed FALSE)))
 
-(defrule extinguish-old-star
-	?s <- (star (z ?z) (dt ?dt) (screen-x ?star-screen-x&~nil) (screen-y ?star-screen-y&~nil))
+(defrule extinguish-old-stars
 	(speed ?speed&:(>= ?speed 0.0)&:(<= ?speed 2.0))
-	(test (or
-		(< (- ?z (* ?dt ?speed)) 0)
-		(< ?star-screen-x 0)
-		(< ?star-screen-y 0)
-		(> ?star-screen-x ?*width*)
-		(> ?star-screen-y ?*height*)))
+	(is-spacebar-pressed FALSE)
+	(mouse-wheel-move 0.0)
+	(window-should-close FALSE)
+	(not (frame-time ?))
+	(exists (star
+		(screen-x ?star-screen-x)
+		(screen-y ?star-screen-y)
+		(dt ?dt)
+		(z ?z&:(or
+			(< (- ?z (* ?dt ?speed)) 0)
+			(< ?star-screen-x 0)
+			(< ?star-screen-y 0)
+			(> ?star-screen-x ?*width*)
+			(> ?star-screen-y ?*height*)))))
 	=>
-	(retract ?s)
-	(assert (star)))
+	(do-for-all-facts ((?s star))
+		(or
+			(< (- ?s:z (* ?s:dt ?speed)) 0)
+			(< ?s:screen-x 0)
+			(< ?s:screen-y 0)
+			(> ?s:screen-x ?*width*)
+			(> ?s:screen-y ?*height*))
+		(retract ?s)
+		(assert (star))))
 
 (defrule get-frame-time
 	(speed ?speed&:(>= ?speed 0.0)&:(<= ?speed 2.0))
@@ -91,7 +104,15 @@
 			(> ?star-screen-x ?*width*)
 			(> ?star-screen-y ?*height*)))))
 	=>
-	(assert (frame-time (raylib-get-frame-time))))
+	(bind ?dt (raylib-get-frame-time))
+	(assert (frame-time ?dt))
+	(do-for-all-facts ((?s star)) TRUE
+		(modify ?s
+			(z (- ?s:z (* ?dt ?speed)))
+			(screen-x (+ (* 0.5 ?*width*)  (/ ?s:x ?s:z)))
+			(screen-y (+ (* 0.5 ?*height*) (/ ?s:y ?s:z)))
+			(dt ?dt)
+			(t (raylib-clamp (+ ?s:z (/ 1.0 32.0)) 0.0 1.0)))))
 
 (defrule begin-drawing
 	(speed ?speed&:(>= ?speed 0.0)&:(<= ?speed 2.0))
@@ -100,74 +121,54 @@
 	?i <- (is-spacebar-pressed FALSE)
 	?m <- (mouse-wheel-move 0.0)
 	?w <- (window-should-close FALSE)
-	(not (star (dt ?dt)))
+	(not (drawing))
 	=>
 	(raylib-begin-drawing)
 		(raylib-clear-background ?*bg-color*)
 		(raylib-draw-text (format nil "[MOUSE WHEEL] Current Speed: %.0f" (/ (* 9.0 ?speed) 2.0)) 10 40 20 RAYWHITE)
 		(raylib-draw-text (format nil "[SPACE] Current draw mode: %s" ?lines-or-circles) 10 70 20 RAYWHITE)
-		(raylib-draw-fps 10 10))
+		(raylib-draw-fps 10 10)
+		(assert (drawing)))
 
-(defrule update-star
-	(speed ?speed)
-	(frame-time ?dt)
-	?s <- (star (x ?x) (y ?y) (z ?z) (dt ~?dt) (t ?t))
-	=>
-		(modify ?s
-			(z (- ?z (* ?dt ?speed)))
-			(screen-x (+ (* 0.5 ?*width*)  (/ ?x ?z)))
-			(screen-y (+ (* 0.5 ?*height*) (/ ?y ?z)))
-			(dt ?dt)
-			(drawn FALSE)
-			(t (raylib-clamp (+ ?z (/ 1.0 32.0)) 0.0 1.0))))
-
-(defrule draw-star-line-skip
+(defrule draw-stars-line
 	(draw Lines)
 	(speed ?speed)
 	(frame-time ?dt)
-	?s <- (star (x ?x) (y ?y) (z ?z) (dt ?dt) (t ?t) (screen-x ?star-screen-x) (screen-y ?star-screen-y) (drawn FALSE))
-	(test (<= (- ?t ?z) 1e-3))
+	(drawing)
 	=>
-		(modify ?s (drawn TRUE)))
+		(do-for-all-facts ((?s star)) (> (- ?s:t ?s:z) 1e-3)
+			(raylib-draw-line-v
+				(+ (* 0.5 ?*width*)  (/ ?s:x ?s:t))
+				(+ (* 0.5 ?*height*) (/ ?s:y ?s:t))
+				?s:screen-x
+				?s:screen-y
+				RAYWHITE))
+		(assert (done-drawing)))
 
-(defrule draw-star-line
-	(draw Lines)
-	(speed ?speed)
-	(frame-time ?dt)
-	?s <- (star (x ?x) (y ?y) (z ?z) (dt ?dt) (t ?t) (screen-x ?star-screen-x) (screen-y ?star-screen-y) (drawn FALSE))
-	(test (> (- ?t ?z) 1e-3))
-	=>
-		(raylib-draw-line-v
-			(+ (* 0.5 ?*width*)  (/ ?x ?t))
-			(+ (* 0.5 ?*height*) (/ ?y ?t))
-			?star-screen-x
-			?star-screen-y
-			RAYWHITE)
-		(modify ?s (drawn TRUE)))
-
-(defrule draw-star-circle
+(defrule draw-stars-circle
 	(draw Circles)
 	(speed ?speed)
 	(frame-time ?dt)
-	?s <- (star (x ?x) (y ?y) (z ?z) (dt ?dt) (t ?t) (screen-x ?star-screen-x) (screen-y ?star-screen-y) (drawn FALSE))
+	(drawing)
 	=>
-		(raylib-draw-circle-v
-			?star-screen-x
-			?star-screen-y
-			(raylib-lerp ?z 1.0 5.0)
-			RAYWHITE)
-		(modify ?s (drawn TRUE)))
+		(do-for-all-facts ((?s star)) TRUE
+			(raylib-draw-circle-v
+				?s:screen-x
+				?s:screen-y
+				(raylib-lerp ?s:z 1.0 5.0)
+				RAYWHITE))
+		(assert (done-drawing)))
 
 (defrule end-drawing
 	(speed ?speed)
+	?d <- (drawing)
+	?dd <- (done-drawing)
 	?f <- (frame-time ?dt)
 	?i <- (is-spacebar-pressed FALSE)
 	?m <- (mouse-wheel-move 0.0)
 	?w <- (window-should-close FALSE)
-	(not (star (dt ~?dt)))
-	(not (star (drawn FALSE)))
 	=>
-		(retract ?f ?i ?m ?w)
+		(retract ?i ?m ?w ?f ?dd ?d)
 		(assert
 			(mouse-wheel-move (raylib-get-mouse-wheel-move))
 			(is-spacebar-pressed (raylib-is-key-pressed KEY_SPACE))

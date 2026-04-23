@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  12/04/22             */
+   /*            CLIPS Version 6.42  05/08/23             */
    /*                                                     */
    /*                 RULE PARSING MODULE                 */
    /*******************************************************/
@@ -48,6 +48,9 @@
 /*                                                           */
 /*      6.41: Used gensnprintf in place of gensprintf and.   */
 /*            sprintf.                                       */
+/*                                                           */
+/*      6.42: DumpRuleAnalysis was incorrectly using         */
+/*            gensprintf instead of gensnprintf.             */
 /*                                                           */
 /*************************************************************/
 
@@ -1006,9 +1009,9 @@ void DumpRuleAnalysis(
    for (traceNode = tempNode; traceNode != NULL; traceNode = traceNode->bottom)
      {
       if (traceNode->userCE)
-        { gensprintf(buffer,sizeof(buffer),"UCE %2d (%2d %2d): ",traceNode->whichCE,traceNode->beginNandDepth,traceNode->endNandDepth); }
+        { gensnprintf(buffer,sizeof(buffer),"UCE %2d (%2d %2d): ",traceNode->whichCE,traceNode->beginNandDepth,traceNode->endNandDepth); }
       else
-        { gensprintf(buffer,sizeof(buffer),"SCE %2d (%2d %2d): ",traceNode->whichCE,traceNode->beginNandDepth,traceNode->endNandDepth); }
+        { gensnprintf(buffer,sizeof(buffer),"SCE %2d (%2d %2d): ",traceNode->whichCE,traceNode->beginNandDepth,traceNode->endNandDepth); }
 
       WriteString(theEnv,STDOUT,buffer);
 

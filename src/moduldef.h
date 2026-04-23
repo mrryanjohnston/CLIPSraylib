@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*             CLIPS Version 6.40  08/25/16            */
+   /*             CLIPS Version 6.42  03/02/24            */
    /*                                                     */
    /*                DEFMODULE HEADER FILE                */
    /*******************************************************/
@@ -50,6 +50,9 @@
 /*                                                           */
 /*            UDF redesign.                                  */
 /*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
+/*                                                           */
 /*************************************************************/
 
 #ifndef _H_moduldef
@@ -67,6 +70,12 @@ typedef struct moduleStackItem ModuleStackItem;
 
 typedef void *AllocateModuleFunction(Environment *);
 typedef void FreeModuleFunction(Environment *,void *);
+
+typedef ConstructHeader *FindConstructFunction(Environment *,const char *);
+typedef ConstructHeader *GetNextConstructFunction(Environment *,ConstructHeader *);
+typedef bool IsConstructDeletableFunction(ConstructHeader *);
+typedef bool DeleteConstructFunction(ConstructHeader *,Environment *);
+typedef void FreeConstructFunction(Environment *,ConstructHeader *);
 
 typedef enum
   {
@@ -86,7 +95,6 @@ typedef enum
 #include <stdio.h>
 #include "entities.h"
 #include "userdata.h"
-#include "utility.h"
 
 struct constructHeader
   {
@@ -106,12 +114,6 @@ struct defmoduleItemHeader
    ConstructHeader *firstItem;
    ConstructHeader *lastItem;
   };
-
-typedef ConstructHeader *FindConstructFunction(Environment *,const char *);
-typedef ConstructHeader *GetNextConstructFunction(Environment *,ConstructHeader *);
-typedef bool IsConstructDeletableFunction(ConstructHeader *);
-typedef bool DeleteConstructFunction(ConstructHeader *,Environment *);
-typedef void FreeConstructFunction(Environment *,ConstructHeader *);
 
 /**********************************************************************/
 /* defmodule                                                          */
@@ -267,5 +269,3 @@ struct defmoduleData
    unsigned short                 GetNumberOfDefmodules(Environment *);
 
 #endif /* _H_moduldef */
-
-

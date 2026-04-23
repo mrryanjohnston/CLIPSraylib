@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  02/03/21             */
+   /*            CLIPS Version 6.42  03/02/24             */
    /*                                                     */
    /*          OBJECT PATTERN MATCHER MODULE              */
    /*******************************************************/
@@ -56,6 +56,9 @@
 /*            UDF redesign.                                  */
 /*                                                           */
 /*            Removed initial-object support.                */
+/*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
 /*                                                           */
 /*************************************************************/
 /* =========================================
@@ -1285,7 +1288,8 @@ static void ClearObjectPatternMatches(
    /* ============================
       Check for garbaged instances
       ============================ */
-   igrb = InstanceData(theEnv)->InstanceGarbageList;
+
+   igrb = UtilityData(theEnv)->CurrentGarbageFrame->GarbageInstances;
    while (igrb != NULL)
      {
       RemoveObjectPartialMatches(theEnv,igrb->ins,(struct patternNodeHeader *) alphaPtr);

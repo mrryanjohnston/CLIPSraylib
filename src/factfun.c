@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  12/04/22             */
+   /*            CLIPS Version 6.42  01/08/25             */
    /*                                                     */
    /*               FACT FUNCTIONS MODULE                 */
    /*******************************************************/
@@ -99,6 +99,8 @@
 /*      6.41: Used gensnprintf in place of gensprintf and.   */
 /*            sprintf.                                       */
 /*                                                           */
+/*      6.42: Added fact-index-to-fact function.             */
+/*                                                           */
 /*************************************************************/
 
 #include <stdio.h>
@@ -133,6 +135,7 @@ void FactFunctionDefinitions(
    AddUDF(theEnv,"get-fact-list","m",0,1,"y",GetFactListFunction,"GetFactListFunction",NULL);
    AddUDF(theEnv,"ppfact","vs",1,3,"*;lf;ldsyn",PPFactFunction,"PPFactFunction",NULL);
    AddUDF(theEnv,"fact-addressp","b",1,1,NULL,FactAddresspFunction,"FactAddresspFunction",NULL);
+   AddUDF(theEnv,"fact-index-to-fact","bf",1,1,NULL,FactIndexToFactFunction,"FactIndexToFactFunction",NULL);
 #else
 #if MAC_XCD
 #pragma unused(theEnv)
@@ -677,6 +680,27 @@ Fact *GetFactAddressOrIndexArgument(
    return NULL;
   }
 
+/*********************************************/
+/* FactIndexToFactFunction: C access routine */
+/*   for the fact-index-to-fact function.    */
+/*********************************************/
+void FactIndexToFactFunction(
+  Environment *theEnv,
+  UDFContext *context,
+  UDFValue *returnValue)
+  {
+   UDFValue theArg;
+   Fact *fact;
+   
+   returnValue->lexemeValue = FalseSymbol(theEnv);
+   
+   if (! UDFFirstArgument(context,INTEGER_BIT,&theArg))
+     { return; }
+      
+   fact = FindIndexedFact(theEnv,theArg.integerValue->contents);
+   
+   if (fact != NULL)
+     { returnValue->factValue = fact; }
+  }
+
 #endif /* DEFTEMPLATE_CONSTRUCT */
-
-

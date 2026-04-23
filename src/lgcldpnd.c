@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  08/25/16             */
+   /*            CLIPS Version 6.42  01/09/25             */
    /*                                                     */
    /*             LOGICAL DEPENDENCIES MODULE             */
    /*******************************************************/
@@ -114,12 +114,9 @@ bool AddLogicalDependencies(
    if ((theBinds->leftParent == NULL) && (theBinds->rightParent == NULL))
      { return false; }
 
-   /*==============================================================*/
-   /* Add a dependency link between the partial match and the data */
-   /* entity. The dependency links are stored in the partial match */
-   /* behind the data entities stored in the partial match and the */
-   /* activation link, if any.                                     */
-   /*==============================================================*/
+   /*=================================================================*/
+   /* Add a dependency link between the partial match and the entity. */
+   /*=================================================================*/
 
    newDependency = get_struct(theEnv,dependency);
    newDependency->dPtr = theEntity;

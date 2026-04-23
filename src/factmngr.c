@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  03/15/23             */
+   /*            CLIPS Version 6.42  03/02/24             */
    /*                                                     */
    /*                 FACT MANAGER MODULE                 */
    /*******************************************************/
@@ -126,6 +126,9 @@
 /*            FMModify was releasing a multifield that was   */
 /*            allocated to the fact just modified.           */
 /*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
+/*                                                           */
 /*************************************************************/
 
 #include <stdio.h>
@@ -168,7 +171,6 @@
 
    static void                    ResetFacts(Environment *,void *);
    static bool                    ClearFactsReady(Environment *,void *);
-   static void                    RemoveGarbageFacts(Environment *,void *);
    static void                    DeallocateFactData(Environment *);
    static bool                    RetractCallback(Fact *,Environment *);
 
@@ -224,13 +226,6 @@ void InitializeFacts(
 
    AddResetFunction(theEnv,"facts",ResetFacts,60,NULL);
    AddClearReadyFunction(theEnv,"facts",ClearFactsReady,0,NULL);
-
-   /*=============================*/
-   /* Initialize periodic garbage */
-   /* collection for facts.       */
-   /*=============================*/
-
-   AddCleanupFunction(theEnv,"facts",RemoveGarbageFacts,0,NULL);
 
    /*===================================*/
    /* Initialize fact pattern matching. */
@@ -325,14 +320,6 @@ static void DeallocateFactData(
 
       ReturnEntityDependencies(theEnv,(struct patternEntity *) tmpFactPtr);
 
-      ReturnFact(theEnv,tmpFactPtr);
-      tmpFactPtr = nextFactPtr;
-     }
-
-   tmpFactPtr = FactData(theEnv)->GarbageFacts;
-   while (tmpFactPtr != NULL)
-     {
-      nextFactPtr = tmpFactPtr->nextFact;
       ReturnFact(theEnv,tmpFactPtr);
       tmpFactPtr = nextFactPtr;
      }
@@ -679,16 +666,12 @@ RetractError RetractDriver(
    /*===================================================*/
 
    if (! modifyOperation)
-     {
-      theFact->nextFact = FactData(theEnv)->GarbageFacts;
-      FactData(theEnv)->GarbageFacts = theFact;
-      UtilityData(theEnv)->CurrentGarbageFrame->dirty = true;
-     }
+     { AddToGarbageFactList(theEnv,theFact); }
    else
      {
       theFact->nextFact = NULL;
+      theFact->garbage = true;
      }
-   theFact->garbage = true;
 
    /*===================================================*/
    /* Reset the evaluation error flag since expressions */
@@ -793,14 +776,15 @@ RetractError Retract(
 /*   their variable bindings directly from the fact data structure */
 /*   and the facts may be in use in other data structures.         */
 /*******************************************************************/
-static void RemoveGarbageFacts(
-  Environment *theEnv,
-  void *context)
+void RemoveGarbageFacts(
+  Environment *theEnv)
   {
    Fact *factPtr, *nextPtr, *lastPtr = NULL;
+   struct garbageFrame *theGF;
 
-   factPtr = FactData(theEnv)->GarbageFacts;
-
+   theGF = UtilityData(theEnv)->CurrentGarbageFrame;
+   factPtr = theGF->GarbageFacts;
+   
    while (factPtr != NULL)
      {
       nextPtr = factPtr->nextFact;
@@ -815,14 +799,18 @@ static void RemoveGarbageFacts(
            { AtomDeinstall(theEnv,theSegment->contents[i].header->type,theSegment->contents[i].value); }
 
          ReturnFact(theEnv,factPtr);
-         if (lastPtr == NULL) FactData(theEnv)->GarbageFacts = nextPtr;
-         else lastPtr->nextFact = nextPtr;
+         if (lastPtr == NULL)
+           { theGF->GarbageFacts = nextPtr; }
+         else
+           { lastPtr->nextFact = nextPtr; }
         }
       else
         { lastPtr = factPtr; }
 
       factPtr = nextPtr;
      }
+     
+   theGF->LastGarbageFact = lastPtr;
   }
 
 /********************************************************/
@@ -905,12 +893,7 @@ Fact *AssertDriver(
       if (reuseIndex == 0)
         { ReturnFact(theEnv,theFact); }
       else
-        {
-         theFact->nextFact = FactData(theEnv)->GarbageFacts;
-         FactData(theEnv)->GarbageFacts = theFact;
-         UtilityData(theEnv)->CurrentGarbageFrame->dirty = true;
-         theFact->garbage = true;
-        }
+        { AddToGarbageFactList(theEnv,theFact); }
         
       FactData(theEnv)->assertError = AE_COULD_NOT_ASSERT_ERROR;
       return NULL;
@@ -3367,6 +3350,26 @@ FactModifierError FMError(
   Environment *theEnv)
   {
    return FactData(theEnv)->factModifierError;
+  }
+  
+/*************************/
+/* AddToGarbageFactList: */
+/************************/
+void AddToGarbageFactList(
+  Environment *theEnv,
+  Fact *theFact)
+  {
+   struct garbageFrame *theGF;
+  
+   theGF = UtilityData(theEnv)->CurrentGarbageFrame;
+   
+   theFact->garbage = true;
+   theFact->nextFact = theGF->GarbageFacts;
+   theGF->GarbageFacts = theFact;
+   theGF->dirty = true;
+   
+   if (theGF->LastGarbageFact == NULL)
+     { theGF->LastGarbageFact = theFact; }
   }
 
 #endif /* DEFTEMPLATE_CONSTRUCT && DEFRULE_CONSTRUCT */

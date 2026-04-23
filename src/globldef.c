@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  07/23/21             */
+   /*            CLIPS Version 6.42  07/21/24             */
    /*                                                     */
    /*                  DEFGLOBAL MODULE                   */
    /*******************************************************/
@@ -64,6 +64,9 @@
 /*            by itself at the command prompt and within     */
 /*            the eval function now consistently returns the */
 /*            value of  the variable.                        */
+/*                                                           */
+/*      6.42: Fixed garbage collection issue with defglobal  */
+/*            assigned its current value.                    */
 /*                                                           */
 /*************************************************************/
 
@@ -631,6 +634,11 @@ static bool EntityGetDefglobalValue(
    /*=================================*/
 
    CLIPSToUDFValue(&theGlobal->current,vPtr);
+   if (vPtr->header->type == MULTIFIELD_TYPE)
+     {
+      vPtr->multifieldValue = CopyMultifield(theEnv,vPtr->multifieldValue);
+      AddToMultifieldList(theEnv,vPtr->multifieldValue);
+     }
    
    if (vPtr->value == FalseSymbol(theEnv))
      { return false; }
@@ -658,6 +666,8 @@ bool QGetDefglobalUDFValue(
      {
       vPtr->begin = 0;
       vPtr->range = theGlobal->current.multifieldValue->length;
+      vPtr->multifieldValue = CopyMultifield(theEnv,vPtr->multifieldValue);
+      AddToMultifieldList(theEnv,vPtr->multifieldValue);
      }
      
    if (vPtr->value == FalseSymbol(theEnv))

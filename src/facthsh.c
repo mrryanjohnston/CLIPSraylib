@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  12/04/22             */
+   /*            CLIPS Version 6.42  03/02/24             */
    /*                                                     */
    /*                 FACT HASHING MODULE                 */
    /*******************************************************/
@@ -48,6 +48,9 @@
 /*                                                           */
 /*      6.41: Used gensnprintf in place of gensprintf and.   */
 /*            sprintf.                                       */
+/*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
 /*                                                           */
 /*************************************************************/
 
@@ -258,12 +261,7 @@ size_t HandleFactDuplication(
    if (reuseIndex == 0)
      { ReturnFact(theEnv,theFact); }
    else
-     {
-      theFact->nextFact = FactData(theEnv)->GarbageFacts;
-      FactData(theEnv)->GarbageFacts = theFact;
-      UtilityData(theEnv)->CurrentGarbageFrame->dirty = true;
-      theFact->garbage = true;
-     }
+     { AddToGarbageFactList(theEnv,theFact); }
 
 #if DEFRULE_CONSTRUCT
    AddLogicalDependencies(theEnv,(struct patternEntity *) *duplicate,true);

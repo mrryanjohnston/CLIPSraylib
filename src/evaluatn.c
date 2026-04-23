@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  12/04/22             */
+   /*            CLIPS Version 6.42  01/07/25             */
    /*                                                     */
    /*                  EVALUATION MODULE                  */
    /*******************************************************/
@@ -1504,10 +1504,10 @@ FunctionCallBuilderError FCBCall(
    if (! GetFunctionReference(theFCB->fcbEnv,functionName,&theReference))
      { return FCBE_FUNCTION_NOT_FOUND_ERROR; }
      
-   /*============================================*/
-   /* Functions with specialized parsers  cannot */
-   /* be used with a FunctionCallBuilder.        */
-   /*============================================*/
+   /*===========================================*/
+   /* Functions with specialized parsers cannot */
+   /* be used with a FunctionCallBuilder.       */
+   /*===========================================*/
    
    if (theReference.type == FCALL)
      {

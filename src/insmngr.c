@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  03/11/23             */
+   /*            CLIPS Version 6.42  06/17/24             */
    /*                                                     */
    /*          INSTANCE PRIMITIVE SUPPORT MODULE          */
    /*******************************************************/
@@ -64,10 +64,15 @@
 /*            allocating storage for inherited slots.        */
 /*                                                           */
 /*            Removed unnecessary variable initialization    */
-/*            in IBAbort.                                     */
+/*            in IBAbort.                                    */
 /*                                                           */
 /*            Calling IMPutSlot with empty multifield to     */
 /*            multifield slot did not assign value.          */
+/*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
+/*                                                           */
+/*            Fixed memory leak for non-reactive instances.  */
 /*                                                           */
 /*************************************************************/
 
@@ -629,7 +634,8 @@ UnmakeInstanceError QuashInstance(
    if ((iflag == 1) && (ins->patternHeader.busyCount == 0))
      {
       if ((ObjectReteData(theEnv)->DelayObjectPatternMatching == false) ||
-          (syncFlag == false)) 
+          (syncFlag == false) ||
+          (ins->cls->reactive == false))
         { RemoveInstanceData(theEnv,ins); }
       else
         { ins->dataRemovalDeferred = true; }
@@ -651,12 +657,20 @@ UnmakeInstanceError QuashInstance(
      }
    else
      {
+      struct garbageFrame *theGF;
+      
+      theGF = UtilityData(theEnv)->CurrentGarbageFrame;
+
       gptr = get_struct(theEnv,igarbage);
       ins->garbage = 1;
       gptr->ins = ins;
-      gptr->nxt = InstanceData(theEnv)->InstanceGarbageList;
-      InstanceData(theEnv)->InstanceGarbageList = gptr;
-      UtilityData(theEnv)->CurrentGarbageFrame->dirty = true;
+      gptr->nxt = theGF->GarbageInstances;
+      theGF->GarbageInstances = gptr;
+      
+      if (theGF->LastGarbageInstance == NULL)
+        { theGF->LastGarbageInstance = gptr; }
+
+      theGF->dirty = true;
      }
      
    InstanceData(theEnv)->ChangesToInstances = true;
@@ -670,7 +684,6 @@ UnmakeInstanceError QuashInstance(
    InstanceData(theEnv)->unmakeInstanceError = UIE_NO_ERROR;
    return UIE_NO_ERROR;
   }
-
 
 #if DEFRULE_CONSTRUCT
 

@@ -3908,6 +3908,14 @@ void HexStringToIntUDF(
 	out->integerValue = CreateInteger(theEnv, val);
 }
 
+void RaylibPollInputEvents(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	PollInputEvents();
+}
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -3999,4 +4007,6 @@ void UserFunctions(
 	  AddUDF(env,"raylib-get-random-value","l",2,2,";d;d",RaylibGetRandomValue,"RaylibGetRandomValue",NULL);
 
 	  AddUDF(env,"hex-string-to-int","l",1,1,"sy",HexStringToIntUDF,"HexStringToIntUDF",NULL);
+
+	  AddUDF(env,"raylib-poll-input-events","s",0,0,NULL,RaylibPollInputEvents,"RaylibPollInputEvents",NULL);
   }

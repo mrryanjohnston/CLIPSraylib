@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  01/27/23             */
+   /*            CLIPS Version 6.42  01/07/25             */
    /*                                                     */
    /*               SYSTEM DEPENDENT MODULE               */
    /*******************************************************/
@@ -126,6 +126,9 @@
 /*            Changed gengetcwd buffer length parameter from */
 /*            int to size_t.                                 */
 /*                                                           */
+/*      6.42: Added void argument to genrand and gentime     */
+/*            functions to remove compiler warnings.         */
+/*                                                           */
 /*************************************************************/
 
 #include "setup.h"
@@ -207,7 +210,7 @@ void InitializeSystemDependentData(
 /*   which indicates the present time. Used internally   */
 /*   for timing rule firings and debugging.              */
 /*********************************************************/
-double gentime()
+double gentime(void)
   {
 #if MAC_XCD || UNIX_V || DARWIN || LINUX || UNIX_7
    struct timeval now;
@@ -398,7 +401,7 @@ int gensnprintf(
 /******************************************************/
 /* genrand: Generic random number generator function. */
 /******************************************************/
-int genrand()
+int genrand(void)
   {
    return(rand());
   }

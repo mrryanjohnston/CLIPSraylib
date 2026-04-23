@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.41  12/04/22             */
+   /*            CLIPS Version 6.42  12/02/23             */
    /*                                                     */
    /*                    ENGINE MODULE                    */
    /*******************************************************/
@@ -87,6 +87,9 @@
 /*                                                           */
 /*      6.41: Used gensnprintf in place of gensprintf and.   */
 /*            sprintf.                                       */
+/*                                                           */
+/*      6.42: Added call to clean the current garbage frame  */
+/*            for an embedded Run function call.             */
 /*                                                           */
 /*************************************************************/
 
@@ -686,6 +689,8 @@ long long Run(
    /*================================*/
 
    GCBlockEnd(theEnv,&gcb);
+   if (EvaluationData(theEnv)->CurrentExpression == NULL)
+     { CleanCurrentGarbageFrame(theEnv,NULL); }
    CallPeriodicTasks(theEnv);
 
    /*===================================*/

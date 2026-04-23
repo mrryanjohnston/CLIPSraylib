@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  07/30/16             */
+   /*            CLIPS Version 6.42  07/19/24             */
    /*                                                     */
    /*                    SCANNER MODULE                   */
    /*******************************************************/
@@ -36,6 +36,9 @@
 /*                                                           */
 /*            Removed use of void pointers for specific      */
 /*            data structures.                               */
+/*                                                           */
+/*      6.42: Added check to verify that the first character */
+/*            of a variable is valid.                        */
 /*                                                           */
 /*************************************************************/
 
@@ -219,10 +222,29 @@ void GetToken(
             }
           else
             {
-             theToken->tknType = SF_WILDCARD_TOKEN;
-             theToken->lexemeValue = CreateSymbol(theEnv,"?");
-             UnreadRouter(theEnv,logicalName,inchar);
-             theToken->printForm = "?";
+             if (isprint(inchar) &&
+                 (! isspace(inchar)) &&
+                 (inchar != '(') &&
+                 (inchar != ')'))
+               {
+                char buffer[2];
+                
+                buffer[0] = (char) inchar;
+                buffer[1] = EOS;
+                PrintErrorID(theEnv,"SCANNER",2,true);
+                WriteString(theEnv,STDERR,"The character '");
+                WriteString(theEnv,STDERR,buffer);
+                WriteString(theEnv,STDERR,"' is not valid as the first character of a variable name.\n");
+                theToken->tknType = STOP_TOKEN;
+                theToken->printForm = AppendStrings(theEnv,"?",buffer);
+               }
+             else
+               {
+                theToken->tknType = SF_WILDCARD_TOKEN;
+                theToken->lexemeValue = CreateSymbol(theEnv,"?");
+                UnreadRouter(theEnv,logicalName,inchar);
+                theToken->printForm = "?";
+               }
             }
           break;
 
@@ -264,10 +286,28 @@ void GetToken(
               }
             else
               {
-               theToken->tknType = MF_WILDCARD_TOKEN;
-               theToken->lexemeValue = CreateSymbol(theEnv,"$?");
-               theToken->printForm = "$?";
-               UnreadRouter(theEnv,logicalName,inchar);
+               if (isprint(inchar) &&
+                   (! isspace(inchar)) &&
+                   (inchar != '(') &&
+                   (inchar != ')'))
+                 {
+                  char buffer[2];
+                  buffer[0] = (char) inchar;
+                  buffer[1] = EOS;
+                  PrintErrorID(theEnv,"SCANNER",2,true);
+                  WriteString(theEnv,STDERR,"The character '");
+                  WriteString(theEnv,STDERR,buffer);
+                  WriteString(theEnv,STDERR,"' is not valid as the first character of a variable name.\n");
+                  theToken->tknType = STOP_TOKEN;
+                  theToken->printForm = AppendStrings(theEnv,"$?",buffer);
+                 }
+               else
+                 {
+                  theToken->tknType = MF_WILDCARD_TOKEN;
+                  theToken->lexemeValue = CreateSymbol(theEnv,"$?");
+                  theToken->printForm = "$?";
+                  UnreadRouter(theEnv,logicalName,inchar);
+                 }
               }
            }
          else

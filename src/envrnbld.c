@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  04/20/20             */
+   /*            CLIPS Version 6.42  01/07/25             */
    /*                                                     */
    /*             ENVIRONMENT BUILD MODULE                */
    /*******************************************************/
@@ -16,6 +16,9 @@
 /*                                                           */
 /*      6.40: Added to separate environment creation and     */
 /*            deletion code.                                 */
+/*                                                           */
+/*      6.42: Added void argument to CreateEnvironment to    */
+/*            fix compiler warning.                          */
 /*                                                           */
 /*************************************************************/
 
@@ -109,7 +112,7 @@
 /* CreateEnvironment: Creates an environment data structure */
 /*   and initializes its content to zero/null.              */
 /************************************************************/
-Environment *CreateEnvironment()
+Environment *CreateEnvironment(void)
   {
    return CreateEnvironmentDriver(NULL,NULL,NULL,NULL,NULL,NULL);
   }

@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  11/01/16             */
+   /*            CLIPS Version 6.42  06/20/23             */
    /*                                                     */
    /*                                                     */
    /*******************************************************/
@@ -45,6 +45,9 @@
 /*            Changed find construct functionality so that   */
 /*            imported modules are search when locating a    */
 /*            named construct.                               */
+/*                                                           */
+/*      6.32: Local variable count not updated when method   */
+/*            body updated.                                  */
 /*                                                           */
 /*      6.40: Pragma once and other inclusion changes.       */
 /*                                                           */
@@ -499,13 +502,13 @@ Defmethod *AddMethod(
    meth->actions = actions;
    ExpressionInstall(theEnv,meth->actions);
    meth->header.ppForm = ppForm;
+   meth->localVarCount = lvars;
    if (mposn == -1)
      {
       RestoreBusyCount(gfunc);
       return(meth);
      }
 
-   meth->localVarCount = lvars;
    meth->restrictionCount = rcnt;
       
    if (wildcard != NULL)

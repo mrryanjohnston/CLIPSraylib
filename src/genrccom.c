@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  02/19/20             */
+   /*            CLIPS Version 6.42  05/10/24             */
    /*                                                     */
    /*                                                     */
    /*******************************************************/
@@ -70,6 +70,9 @@
 /*                                                           */
 /*            Pretty print functions accept optional logical */
 /*            name argument.                                 */
+/*                                                           */
+/*      6.42: Bug fix for watching methods with a specific   */
+/*            method index.                                  */
 /*                                                           */
 /*************************************************************/
 
@@ -1875,7 +1878,7 @@ static bool DefmethodWatchSupport(
            return false;
          if ((methodIndex.header->type != INTEGER_TYPE) ? false :
              ((methodIndex.integerValue->contents <= 0) ? false :
-              (FindMethodByIndex(theGeneric,theMethod) != METHOD_NOT_FOUND)))
+              (FindMethodByIndex(theGeneric,(unsigned short) methodIndex.integerValue->contents) != METHOD_NOT_FOUND)))
            theMethod = (unsigned short) methodIndex.integerValue->contents;
          else
            {

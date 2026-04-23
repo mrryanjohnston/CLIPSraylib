@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*             CLIPS Version 6.41  12/04/22            */
+   /*             CLIPS Version 6.42  01/14/25            */
    /*                                                     */
    /*              CONSTRUCT COMPILER MODULE              */
    /*******************************************************/
@@ -716,7 +716,7 @@ static bool WriteInitializationFunction(
    fprintf(fp,"/* CONSTRUCT IMAGE INITIALIZATION FUNCTION */\n");
    fprintf(fp,"/*******************************************/\n");
 
-   fprintf(fp,"\nEnvironment *InitCImage_%d()\n",ConstructCompilerData(theEnv)->ImageID);
+   fprintf(fp,"\nEnvironment *InitCImage_%d(void)\n",ConstructCompilerData(theEnv)->ImageID);
    fprintf(fp,"  {\n");
    fprintf(fp,"   static Environment *theEnv = NULL;\n\n");
    fprintf(fp,"   if (theEnv != NULL) return NULL;\n\n");

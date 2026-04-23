@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  07/09/18             */
+   /*            CLIPS Version 6.42  05/08/23             */
    /*                                                     */
    /*                  MULTIFIELD MODULE                  */
    /*******************************************************/
@@ -58,6 +58,9 @@
 /*            now converts non-primitive value tokens        */
 /*            (such as parentheses) to symbols rather than   */
 /*            strings.                                       */
+/*                                                           */
+/*      6.42: Refactored CreateMultifield to remove          */
+/*            duplicated code.                               */
 /*                                                           */
 /*************************************************************/
 
@@ -314,24 +317,9 @@ Multifield *CreateMultifield(
   Environment *theEnv,
   size_t size)
   {
-   Multifield *theSegment;
-   size_t newSize;
+   Multifield *theSegment = CreateUnmanagedMultifield(theEnv,size);
 
-   if (size == 0) newSize = 1;
-   else newSize = size;
-
-   theSegment = get_var_struct(theEnv,multifield,sizeof(struct clipsValue) * (newSize - 1));
-
-   theSegment->header.type = MULTIFIELD_TYPE;
-   theSegment->length = size;
-   theSegment->busyCount = 0;
-   theSegment->next = NULL;
-
-   theSegment->next = UtilityData(theEnv)->CurrentGarbageFrame->ListOfMultifields;
-   UtilityData(theEnv)->CurrentGarbageFrame->ListOfMultifields = theSegment;
-   UtilityData(theEnv)->CurrentGarbageFrame->dirty = true;
-   if (UtilityData(theEnv)->CurrentGarbageFrame->LastMultifield == NULL)
-     { UtilityData(theEnv)->CurrentGarbageFrame->LastMultifield = theSegment; }
+   AddToMultifieldList(theEnv,theSegment);
 
    return theSegment;
   }

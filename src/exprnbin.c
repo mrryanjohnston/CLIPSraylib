@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  02/02/21             */
+   /*            CLIPS Version 6.42  03/02/24             */
    /*                                                     */
    /*             EXPRESSION BSAVE/BLOAD MODULE           */
    /*******************************************************/
@@ -195,6 +195,10 @@ static void UpdateExpression(
 #if ! OBJECT_SYSTEM
         ExpressionData(theEnv)->ExpressionArray[obji].type = SYMBOL_TYPE;
 #endif
+        ExpressionData(theEnv)->ExpressionArray[obji].value = SymbolData(theEnv)->SymbolArray[bexp->value];
+        IncrementLexemeCount(ExpressionData(theEnv)->ExpressionArray[obji].lexemeValue);
+        break;
+
       case GBL_VARIABLE:
       case SYMBOL_TYPE:
       case STRING_TYPE:

@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  08/25/16             */
+   /*            CLIPS Version 6.42  04/09/24             */
    /*                                                     */
    /*                    WATCH MODULE                     */
    /*******************************************************/
@@ -51,6 +51,9 @@
 /*            ALLOW_ENVIRONMENT_GLOBALS no longer supported. */
 /*                                                           */
 /*            UDF redesign.                                  */
+/*                                                           */
+/*      6.42: Getting the "all" watch item didn't return     */
+/*            TRUE when all watch items were watched.        */
 /*                                                           */
 /*************************************************************/
 
@@ -557,9 +560,21 @@ int GetWatchItem(
   const char *itemName)
   {
    WatchItemRecord *wPtr;
+   bool all = false;
+
+   if (strcmp(itemName,"all") == 0)
+     { all = true; }
 
    for (wPtr = WatchData(theEnv)->ListOfWatchItems; wPtr != NULL; wPtr = wPtr->next)
      {
+      if (all)
+        {
+         if (! (*(wPtr->flag)))
+           { return 0; }
+           
+         continue;
+        }
+        
       if (strcmp(itemName,wPtr->name) == 0)
         {
          if (*(wPtr->flag))
@@ -568,6 +583,8 @@ int GetWatchItem(
            { return 0; }
         }
      }
+     
+   if (all) return 1;
 
    return -1;
   }

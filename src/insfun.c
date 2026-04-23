@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  11/07/17             */
+   /*            CLIPS Version 6.42  03/02/24             */
    /*                                                     */
    /*               INSTANCE FUNCTIONS MODULE             */
    /*******************************************************/
@@ -72,6 +72,9 @@
 /*            ALLOW_ENVIRONMENT_GLOBALS no longer supported. */
 /*                                                           */
 /*            UDF redesign.                                  */
+/*                                                           */
+/*      6.42: Fixed GC bug by including garbage fact and     */
+/*            instances in the GC frame.                     */
 /*                                                           */
 /*************************************************************/
 
@@ -231,15 +234,19 @@ void InitializeInstanceTable(
   NOTES        : None
  *******************************************************/
 void CleanupInstances(
-  Environment *theEnv,
-  void *context)
+  Environment *theEnv)
   {
+   struct garbageFrame *theGF;
    IGARBAGE *gprv,*gtmp,*dump;
 
    if (InstanceData(theEnv)->MaintainGarbageInstances)
      return;
-   gprv = NULL;
-   gtmp = InstanceData(theEnv)->InstanceGarbageList;
+    
+   theGF = UtilityData(theEnv)->CurrentGarbageFrame;
+
+   gprv = NULL;   
+   gtmp = theGF->GarbageInstances;
+   
    while (gtmp != NULL)
      {
 #if DEFRULE_CONSTRUCT
@@ -252,7 +259,7 @@ void CleanupInstances(
          ReleaseLexeme(theEnv,gtmp->ins->name);
          rtn_struct(theEnv,instance,gtmp->ins);
          if (gprv == NULL)
-           InstanceData(theEnv)->InstanceGarbageList = gtmp->nxt;
+           theGF->GarbageInstances = gtmp->nxt;
          else
            gprv->nxt = gtmp->nxt;
          dump = gtmp;
@@ -265,6 +272,8 @@ void CleanupInstances(
          gtmp = gtmp->nxt;
         }
      }
+     
+   theGF->LastGarbageInstance = gprv;
   }
 
 /*******************************************************
