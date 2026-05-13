@@ -22,6 +22,7 @@ shapes-bouncing-ball.bat
 shapes-collision-area.bat
 shapes-draw-rectangle-rounded.bat
 shapes-logo-raylib-anim.bat
+shapes-starfield-effect.bat
 program-2d-camera-platformer.bat
 program.bat
 program-circles.bat
@@ -31,6 +32,7 @@ program-key.bat
 program-rectangles.bat
 program-report-mouse.bat
 program-report-mouse-no-time.bat
+core-3d-camera-split-screen.bat
 ```
 
 `program-2d-camera-platformer.bat` attempts to recreate

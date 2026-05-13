@@ -1152,6 +1152,233 @@ void RaylibDrawRectangleRoundedLinesEx(
 	DrawRectangleRoundedLinesEx(rec, roundness, segments, lineThickness, color);
 }
 
+void RaylibDrawPlane(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	float centerposx, centerposy, centerposz, sizex, sizey;
+	int r, g, b, a;
+	Color color;
+	Vector3 centerpos;
+	Vector2 size;
+	UDFValue theArg;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			centerposx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			centerposx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			centerposy = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			centerposy = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			centerposz = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			centerposz = theArg.floatValue->contents;
+			break;
+	}
+
+	centerpos = (Vector3){ centerposx, centerposy, centerposz };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			sizex = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			sizex = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			sizey = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			sizey = theArg.floatValue->contents;
+			break;
+	}
+
+	size = (Vector2){ sizex, sizey };
+
+	if (UDFArgumentCount(context) == 6)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-plane's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 9)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-plane must have either 6 or 9 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawPlane(centerpos, size, color);
+}
+
+void RaylibDrawCube(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	float positionx, positiony, positionz, width, height, length;
+	int r, g, b, a;
+	Color color;
+	Vector3 position;
+	UDFValue theArg;
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positionx = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positionx = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positiony = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positiony = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			positionz = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			positionz = theArg.floatValue->contents;
+			break;
+	}
+
+	position = (Vector3){ positionx, positiony, positionz };
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			width = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			width = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			height = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			height = theArg.floatValue->contents;
+			break;
+	}
+
+	UDFNextArgument(context,NUMBER_BITS,&theArg);
+	switch (theArg.header->type) {
+		case INTEGER_TYPE:
+			length = 1.0f * theArg.integerValue->contents;
+			break;
+		case FLOAT_TYPE:
+			length = theArg.floatValue->contents;
+			break;
+	}
+
+	if (UDFArgumentCount(context) == 7)
+	{
+		UDFNextArgument(context,MULTIFIELD_BIT|SYMBOL_BIT,&theArg);
+		if (theArg.header->type == MULTIFIELD_TYPE)
+		{
+			if (theArg.multifieldValue->length != 4)
+			{
+				Writeln(theEnv, "raylib-draw-cube's multifield arg must have exactly 4 elements");
+				UDFThrowError(context);
+				return;
+			}
+			r = theArg.multifieldValue->contents[0].integerValue->contents;
+			g = theArg.multifieldValue->contents[1].integerValue->contents;
+			b = theArg.multifieldValue->contents[2].integerValue->contents;
+			a = theArg.multifieldValue->contents[3].integerValue->contents;
+			color = (Color){ r, g, b, a };
+		}
+		else
+		{
+			str_to_color(theArg.lexemeValue->contents, &color);
+		}
+	}
+	else if (UDFArgumentCount(context) == 10)
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		r = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		g = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		b = theArg.integerValue->contents;
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		a = theArg.integerValue->contents;
+		color = (Color){r, g, b, a};
+	}
+	else
+	{
+		Writeln(theEnv, "raylib-draw-cube must have either 7 or 10 arguments");
+		UDFThrowError(context);
+		return;
+	}
+
+	DrawCube(position, width, height, length, color);
+}
+
 void RaylibGetRenderHeight(
 		Environment *theEnv,
 		UDFContext *context,
@@ -2213,6 +2440,170 @@ void RaylibEndMode2D(
 		UDFValue *returnValue)
 {
 	EndMode2D();
+}
+
+void RaylibBeginMode3D(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	float positionx, positiony, positionz, targetx, targety, targetz, upx, upy, upz, fovy;
+	int projection;
+	UDFValue theArg;
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				positionx = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				positionx = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				positiony = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				positiony = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				positionz = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				positionz = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				targetx = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				targetx = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				targety = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				targety = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				targetz = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				targetz = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				upx = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				upx = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				upy = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				upy = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,NUMBER_BITS,&theArg);
+		switch (theArg.header->type) {
+			case INTEGER_TYPE:
+				upz = 1.0f * theArg.integerValue->contents;
+				break;
+			case FLOAT_TYPE:
+				upz = theArg.floatValue->contents;
+				break;
+		}
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,FLOAT_BIT,&theArg);
+		fovy = theArg.floatValue->contents;
+	}
+	else
+	{
+		fovy = 0.0f;
+	}
+
+	if (UDFHasNextArgument(context))
+	{
+		UDFNextArgument(context,INTEGER_BIT,&theArg);
+		projection = theArg.integerValue->contents;
+	}
+	else
+	{
+		projection = CAMERA_PERSPECTIVE;
+	}
+
+	Camera3D camera = { 0 };
+	camera.position = (Vector3){ positionx, positiony, positionz };
+	camera.target = (Vector3){ targetx, targety, targetz };
+	camera.up = (Vector3){ upx, upy, upz };
+	camera.fovy = fovy;
+	camera.projection = projection;
+
+	BeginMode3D(camera);
+}
+
+void RaylibEndMode3D(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	EndMode3D();
 }
 
 
@@ -3916,6 +4307,60 @@ void RaylibPollInputEvents(
 	PollInputEvents();
 }
 
+void RaylibUnloadRenderTexture(
+		Environment *theEnv,
+		UDFContext *context,
+		UDFValue *returnValue)
+{
+	UDFValue theArg;
+	unsigned int id, textureid, depthid;
+	int width, height, mipmaps, format, depthwidth, depthheight, depthmipmaps, depthformat;
+	Texture2D texture, depth;
+	RenderTexture2D render_texture;
+	MultifieldBuilder *mb;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	id = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	textureid = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	width = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	height = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	mipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	format = theArg.integerValue->contents;
+
+	texture = (Texture2D){ textureid, width, height, mipmaps, format };
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthid = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthwidth = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthheight = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthmipmaps = theArg.integerValue->contents;
+
+	UDFNextArgument(context,INTEGER_BIT,&theArg);
+	depthformat = theArg.integerValue->contents;
+
+	depth = (Texture2D){ depthid, depthwidth, depthheight, depthmipmaps, depthformat };
+
+	render_texture = (RenderTexture2D) { id, texture, depth };
+
+	UnloadRenderTexture(render_texture);
+}
+
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -3949,6 +4394,8 @@ void UserFunctions(
 	  AddUDF(env,"raylib-draw-rectangle-rounded","v",7,10,";dl;dl;dl;dl;dl;l;dmy;l;l;l",RaylibDrawRectangleRounded,"RaylibDrawRectangleRounded",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded-lines","v",7,10,";dl;dl;dl;dl;dl;l;lmy;l;l;l",RaylibDrawRectangleRoundedLines,"RaylibDrawRectangleRoundedLines",NULL);
 	  AddUDF(env,"raylib-draw-rectangle-rounded-lines-ex","v",8,11,";dl;dl;dl;dl;dl;l;dl;lmy;l;l;l",RaylibDrawRectangleRoundedLinesEx,"RaylibDrawRectangleRoundedLinesEx",NULL);
+	  AddUDF(env,"raylib-draw-plane","v",6,9,";dl;dl;dl;dl;dl;lmy;l;l;l",RaylibDrawPlane,"RaylibDrawPlane",NULL);
+	  AddUDF(env,"raylib-draw-cube","v",7,10,";dl;dl;dl;dl;dl;dl;lmy;l;l;l",RaylibDrawCube,"RaylibDrawCube",NULL);
 	  AddUDF(env,"raylib-draw-fps","v",2,2,";l;l",RaylibDrawFPS,"RaylibDrawFPS",NULL);
 	  AddUDF(env,"raylib-fade","m",2,5,";ly;dl;l;l;d",RaylibFade,"RaylibFade",NULL);
 	  AddUDF(env,"raylib-get-mouse-position","m",0,0,NULL,RaylibGetMousePosition,"RaylibGetMousePosition",NULL);
@@ -3974,6 +4421,8 @@ void UserFunctions(
 
 	  AddUDF(env,"raylib-begin-mode-2d","v",0,6,";l;l;l;l;d;d",RaylibBeginMode2D,"RaylibBeginMode2D",NULL);
 	  AddUDF(env,"raylib-end-mode-2d","v",0,0,NULL,RaylibEndMode2D,"RaylibEndMode2D",NULL);
+	  AddUDF(env,"raylib-begin-mode-3d","v",0,11,";dl;dl;dl;dl;dl;dl;dl;dl;dl;d;l",RaylibBeginMode3D,"RaylibBeginMode3D",NULL);
+	  AddUDF(env,"raylib-end-mode-3d","v",0,0,NULL,RaylibEndMode3D,"RaylibEndMode3D",NULL);
 
 	  AddUDF(env,"raylib-set-target-fps","v",1,1,";l",RaylibSetTargetFPS,"RaylibSetTargetFPS",NULL);
 	  AddUDF(env,"raylib-get-frame-time","d",0,0,NULL,RaylibGetFrameTime,"RaylibGetFrameTime",NULL);
@@ -4009,4 +4458,6 @@ void UserFunctions(
 	  AddUDF(env,"hex-string-to-int","l",1,1,"sy",HexStringToIntUDF,"HexStringToIntUDF",NULL);
 
 	  AddUDF(env,"raylib-poll-input-events","s",0,0,NULL,RaylibPollInputEvents,"RaylibPollInputEvents",NULL);
+
+	  AddUDF(env,"raylib-unload-render-texture","s",11,11,NULL,RaylibUnloadRenderTexture,"RaylibUnloadRenderTexture",NULL);
   }
