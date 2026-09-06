@@ -1,0 +1,8 @@
+(127 127 127 255)
+(0 0 0 255)
+(255 255 255 255)
+(100 50 25 127)
+(0 0 0 0)
+(0 82 172 255)
+raylib-color-lerp's multifield arg must have exactly 4 elements
+
