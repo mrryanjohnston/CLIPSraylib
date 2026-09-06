@@ -4,3 +4,6 @@ clips
 *.so
 ._*
 *.swp
+*.tar.gz
+vendor/
+tests/tmp/

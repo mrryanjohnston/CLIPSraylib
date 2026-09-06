@@ -1,0 +1,109 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Build, the symbol check and the suite, against each CLIPS the wrappers
+  # claim to build against and each raylib release in the makefile's table.
+  #
+  # raylib is built from source here, so the runner needs the X11 and
+  # OpenGL development headers, which is all a build of CLIPSraylib needs
+  # anywhere. xvfb is for the one case that opens a window; the rest of
+  # the suite needs no display, and the examples stay manual.
+  # ---------------------------------------------------------------------
+  test:
+    name: test (CLIPS ${{ matrix.clips }}, raylib ${{ matrix.raylib }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        clips: ['6.4.2', svn-6x, svn-7x]
+        raylib: ['6.0', '5.5']
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the X11 and OpenGL development headers, and xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libxi-dev xvfb
+
+      - name: Install subversion
+        if: startsWith(matrix.clips, 'svn-')
+        run: sudo apt-get install -y subversion
+
+      - name: Cache the CLIPS and raylib sources
+        uses: actions/cache@v6
+        with:
+          path: |
+            clips_core_source_642.tar.gz
+            vendor/clips-source
+            vendor/raylib-${{ matrix.raylib }}.tar.gz
+            vendor/raylib-${{ matrix.raylib }}
+          key: deps-${{ matrix.clips }}-raylib-${{ matrix.raylib }}-${{ hashFiles('makefile', 'scripts/*.sh') }}
+          restore-keys: deps-${{ matrix.clips }}-raylib-${{ matrix.raylib }}-
+
+      - name: Build
+        run: make CLIPS_VERSION=${{ matrix.clips }} RAYLIB_VERSION=${{ matrix.raylib }}
+
+      - name: Report what it built against
+        run: |
+          make print-clips CLIPS_VERSION=${{ matrix.clips }} RAYLIB_VERSION=${{ matrix.raylib }}
+          make print-raylib CLIPS_VERSION=${{ matrix.clips }} RAYLIB_VERSION=${{ matrix.raylib }}
+          make print-raylib-ldlibs CLIPS_VERSION=${{ matrix.clips }} RAYLIB_VERSION=${{ matrix.raylib }}
+
+      - name: Check for names defined by both the CLIPS core and raylib
+        run: make check-symbols CLIPS_VERSION=${{ matrix.clips }} RAYLIB_VERSION=${{ matrix.raylib }}
+
+      - name: Run the test suite
+        run: make test CLIPS_VERSION=${{ matrix.clips }} RAYLIB_VERSION=${{ matrix.raylib }}
+
+  # ---------------------------------------------------------------------
+  # raylib's main branch, so that a function it adds with a name the CLIPS
+  # core already uses is noticed before it is released. It is allowed to
+  # fail: main is a moving target and not what a plain "make" builds.
+  # ---------------------------------------------------------------------
+  raylib-main:
+    name: test (CLIPS 6.4.2, raylib main)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the X11 and OpenGL development headers, and xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libxi-dev xvfb
+
+      - name: Cache the CLIPS sources
+        uses: actions/cache@v6
+        with:
+          path: |
+            clips_core_source_642.tar.gz
+            vendor/clips-source
+          key: clips-6.4.2-${{ hashFiles('makefile', 'scripts/*.sh') }}
+          restore-keys: clips-6.4.2-
+
+      - name: Build
+        run: make RAYLIB_VERSION=main
+
+      - name: Report what it built against
+        run: make print-raylib RAYLIB_VERSION=main
+
+      - name: Check for names defined by both the CLIPS core and raylib
+        run: make check-symbols RAYLIB_VERSION=main
+
+      - name: Run the test suite
+        run: make test RAYLIB_VERSION=main
